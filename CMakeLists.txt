@@ -16,6 +16,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
 file(GLOB PROTCOL_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol/*.c)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/openfec)
 file(GLOB OPENFEC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/openfec/*/*.c)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/rscode)
+file(GLOB RSCODE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/rscode/*.c)
 
 add_subdirectory(apps)
 
@@ -25,3 +27,4 @@ add_executable (Test src/main.c ${UTIL_SOURCES} ${INTERFACE_SOURCES} ${PROTCOL_S
 add_executable (Tunnel apps/tunnel.c ${UTIL_SOURCES})
 add_executable (Net apps/net.c ${UTIL_SOURCES})
 add_executable (Tun_Ctrl apps/tun_ctrl.c ${UTIL_SOURCES})
+add_executable (RS_Test apps/example.c ${RSCODE_SOURCES})

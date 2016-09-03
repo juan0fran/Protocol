@@ -115,6 +115,19 @@ Net/fast:
 .PHONY : Net/fast
 
 #=============================================================================
+# Target rules for targets named RS_Test
+
+# Build rule for target.
+RS_Test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 RS_Test
+.PHONY : RS_Test
+
+# fast build rule for target.
+RS_Test/fast:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/build
+.PHONY : RS_Test/fast
+
+#=============================================================================
 # Target rules for targets named Test
 
 # Build rule for target.
@@ -128,6 +141,19 @@ Test/fast:
 .PHONY : Test/fast
 
 #=============================================================================
+# Target rules for targets named Tun_Ctrl
+
+# Build rule for target.
+Tun_Ctrl: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Tun_Ctrl
+.PHONY : Tun_Ctrl
+
+# fast build rule for target.
+Tun_Ctrl/fast:
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/build
+.PHONY : Tun_Ctrl/fast
+
+#=============================================================================
 # Target rules for targets named Tunnel
 
 # Build rule for target.
@@ -139,6 +165,69 @@ Tunnel: cmake_check_build_system
 Tunnel/fast:
 	$(MAKE) -f CMakeFiles/Tunnel.dir/build.make CMakeFiles/Tunnel.dir/build
 .PHONY : Tunnel/fast
+
+#=============================================================================
+# Target rules for targets named openfec
+
+# Build rule for target.
+openfec: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 openfec
+.PHONY : openfec
+
+# fast build rule for target.
+openfec/fast:
+	$(MAKE) -f src/openfec/CMakeFiles/openfec.dir/build.make src/openfec/CMakeFiles/openfec.dir/build
+.PHONY : openfec/fast
+
+#=============================================================================
+# Target rules for targets named simple_client
+
+# Build rule for target.
+simple_client: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 simple_client
+.PHONY : simple_client
+
+# fast build rule for target.
+simple_client/fast:
+	$(MAKE) -f apps/CMakeFiles/simple_client.dir/build.make apps/CMakeFiles/simple_client.dir/build
+.PHONY : simple_client/fast
+
+#=============================================================================
+# Target rules for targets named simple_server
+
+# Build rule for target.
+simple_server: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 simple_server
+.PHONY : simple_server
+
+# fast build rule for target.
+simple_server/fast:
+	$(MAKE) -f apps/CMakeFiles/simple_server.dir/build.make apps/CMakeFiles/simple_server.dir/build
+.PHONY : simple_server/fast
+
+apps/example.o: apps/example.c.o
+.PHONY : apps/example.o
+
+# target to build an object file
+apps/example.c.o:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/apps/example.c.o
+.PHONY : apps/example.c.o
+
+apps/example.i: apps/example.c.i
+.PHONY : apps/example.i
+
+# target to preprocess a source file
+apps/example.c.i:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/apps/example.c.i
+.PHONY : apps/example.c.i
+
+apps/example.s: apps/example.c.s
+.PHONY : apps/example.s
+
+# target to generate assembly for a file
+apps/example.c.s:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/apps/example.c.s
+.PHONY : apps/example.c.s
 
 apps/net.o: apps/net.c.o
 .PHONY : apps/net.o
@@ -163,6 +252,30 @@ apps/net.s: apps/net.c.s
 apps/net.c.s:
 	$(MAKE) -f CMakeFiles/Net.dir/build.make CMakeFiles/Net.dir/apps/net.c.s
 .PHONY : apps/net.c.s
+
+apps/tun_ctrl.o: apps/tun_ctrl.c.o
+.PHONY : apps/tun_ctrl.o
+
+# target to build an object file
+apps/tun_ctrl.c.o:
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/apps/tun_ctrl.c.o
+.PHONY : apps/tun_ctrl.c.o
+
+apps/tun_ctrl.i: apps/tun_ctrl.c.i
+.PHONY : apps/tun_ctrl.i
+
+# target to preprocess a source file
+apps/tun_ctrl.c.i:
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/apps/tun_ctrl.c.i
+.PHONY : apps/tun_ctrl.c.i
+
+apps/tun_ctrl.s: apps/tun_ctrl.c.s
+.PHONY : apps/tun_ctrl.s
+
+# target to generate assembly for a file
+apps/tun_ctrl.c.s:
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/apps/tun_ctrl.c.s
+.PHONY : apps/tun_ctrl.c.s
 
 apps/tunnel.o: apps/tunnel.c.o
 .PHONY : apps/tunnel.o
@@ -284,6 +397,102 @@ src/protocol/StopAndWait.c.s:
 	$(MAKE) -f CMakeFiles/Test.dir/build.make CMakeFiles/Test.dir/src/protocol/StopAndWait.c.s
 .PHONY : src/protocol/StopAndWait.c.s
 
+src/rscode/berlekamp.o: src/rscode/berlekamp.c.o
+.PHONY : src/rscode/berlekamp.o
+
+# target to build an object file
+src/rscode/berlekamp.c.o:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/berlekamp.c.o
+.PHONY : src/rscode/berlekamp.c.o
+
+src/rscode/berlekamp.i: src/rscode/berlekamp.c.i
+.PHONY : src/rscode/berlekamp.i
+
+# target to preprocess a source file
+src/rscode/berlekamp.c.i:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/berlekamp.c.i
+.PHONY : src/rscode/berlekamp.c.i
+
+src/rscode/berlekamp.s: src/rscode/berlekamp.c.s
+.PHONY : src/rscode/berlekamp.s
+
+# target to generate assembly for a file
+src/rscode/berlekamp.c.s:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/berlekamp.c.s
+.PHONY : src/rscode/berlekamp.c.s
+
+src/rscode/crcgen.o: src/rscode/crcgen.c.o
+.PHONY : src/rscode/crcgen.o
+
+# target to build an object file
+src/rscode/crcgen.c.o:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/crcgen.c.o
+.PHONY : src/rscode/crcgen.c.o
+
+src/rscode/crcgen.i: src/rscode/crcgen.c.i
+.PHONY : src/rscode/crcgen.i
+
+# target to preprocess a source file
+src/rscode/crcgen.c.i:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/crcgen.c.i
+.PHONY : src/rscode/crcgen.c.i
+
+src/rscode/crcgen.s: src/rscode/crcgen.c.s
+.PHONY : src/rscode/crcgen.s
+
+# target to generate assembly for a file
+src/rscode/crcgen.c.s:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/crcgen.c.s
+.PHONY : src/rscode/crcgen.c.s
+
+src/rscode/galois.o: src/rscode/galois.c.o
+.PHONY : src/rscode/galois.o
+
+# target to build an object file
+src/rscode/galois.c.o:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/galois.c.o
+.PHONY : src/rscode/galois.c.o
+
+src/rscode/galois.i: src/rscode/galois.c.i
+.PHONY : src/rscode/galois.i
+
+# target to preprocess a source file
+src/rscode/galois.c.i:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/galois.c.i
+.PHONY : src/rscode/galois.c.i
+
+src/rscode/galois.s: src/rscode/galois.c.s
+.PHONY : src/rscode/galois.s
+
+# target to generate assembly for a file
+src/rscode/galois.c.s:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/galois.c.s
+.PHONY : src/rscode/galois.c.s
+
+src/rscode/rs.o: src/rscode/rs.c.o
+.PHONY : src/rscode/rs.o
+
+# target to build an object file
+src/rscode/rs.c.o:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/rs.c.o
+.PHONY : src/rscode/rs.c.o
+
+src/rscode/rs.i: src/rscode/rs.c.i
+.PHONY : src/rscode/rs.i
+
+# target to preprocess a source file
+src/rscode/rs.c.i:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/rs.c.i
+.PHONY : src/rscode/rs.c.i
+
+src/rscode/rs.s: src/rscode/rs.c.s
+.PHONY : src/rscode/rs.s
+
+# target to generate assembly for a file
+src/rscode/rs.c.s:
+	$(MAKE) -f CMakeFiles/RS_Test.dir/build.make CMakeFiles/RS_Test.dir/src/rscode/rs.c.s
+.PHONY : src/rscode/rs.c.s
+
 src/util/socket_utils.o: src/util/socket_utils.c.o
 .PHONY : src/util/socket_utils.o
 
@@ -291,6 +500,7 @@ src/util/socket_utils.o: src/util/socket_utils.c.o
 src/util/socket_utils.c.o:
 	$(MAKE) -f CMakeFiles/Net.dir/build.make CMakeFiles/Net.dir/src/util/socket_utils.c.o
 	$(MAKE) -f CMakeFiles/Test.dir/build.make CMakeFiles/Test.dir/src/util/socket_utils.c.o
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/src/util/socket_utils.c.o
 	$(MAKE) -f CMakeFiles/Tunnel.dir/build.make CMakeFiles/Tunnel.dir/src/util/socket_utils.c.o
 .PHONY : src/util/socket_utils.c.o
 
@@ -301,6 +511,7 @@ src/util/socket_utils.i: src/util/socket_utils.c.i
 src/util/socket_utils.c.i:
 	$(MAKE) -f CMakeFiles/Net.dir/build.make CMakeFiles/Net.dir/src/util/socket_utils.c.i
 	$(MAKE) -f CMakeFiles/Test.dir/build.make CMakeFiles/Test.dir/src/util/socket_utils.c.i
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/src/util/socket_utils.c.i
 	$(MAKE) -f CMakeFiles/Tunnel.dir/build.make CMakeFiles/Tunnel.dir/src/util/socket_utils.c.i
 .PHONY : src/util/socket_utils.c.i
 
@@ -311,6 +522,7 @@ src/util/socket_utils.s: src/util/socket_utils.c.s
 src/util/socket_utils.c.s:
 	$(MAKE) -f CMakeFiles/Net.dir/build.make CMakeFiles/Net.dir/src/util/socket_utils.c.s
 	$(MAKE) -f CMakeFiles/Test.dir/build.make CMakeFiles/Test.dir/src/util/socket_utils.c.s
+	$(MAKE) -f CMakeFiles/Tun_Ctrl.dir/build.make CMakeFiles/Tun_Ctrl.dir/src/util/socket_utils.c.s
 	$(MAKE) -f CMakeFiles/Tunnel.dir/build.make CMakeFiles/Tunnel.dir/src/util/socket_utils.c.s
 .PHONY : src/util/socket_utils.c.s
 
@@ -321,13 +533,24 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... Net"
+	@echo "... RS_Test"
 	@echo "... Test"
+	@echo "... Tun_Ctrl"
 	@echo "... Tunnel"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... openfec"
+	@echo "... simple_client"
+	@echo "... simple_server"
+	@echo "... apps/example.o"
+	@echo "... apps/example.i"
+	@echo "... apps/example.s"
 	@echo "... apps/net.o"
 	@echo "... apps/net.i"
 	@echo "... apps/net.s"
+	@echo "... apps/tun_ctrl.o"
+	@echo "... apps/tun_ctrl.i"
+	@echo "... apps/tun_ctrl.s"
 	@echo "... apps/tunnel.o"
 	@echo "... apps/tunnel.i"
 	@echo "... apps/tunnel.s"
@@ -343,6 +566,18 @@ help:
 	@echo "... src/protocol/StopAndWait.o"
 	@echo "... src/protocol/StopAndWait.i"
 	@echo "... src/protocol/StopAndWait.s"
+	@echo "... src/rscode/berlekamp.o"
+	@echo "... src/rscode/berlekamp.i"
+	@echo "... src/rscode/berlekamp.s"
+	@echo "... src/rscode/crcgen.o"
+	@echo "... src/rscode/crcgen.i"
+	@echo "... src/rscode/crcgen.s"
+	@echo "... src/rscode/galois.o"
+	@echo "... src/rscode/galois.i"
+	@echo "... src/rscode/galois.s"
+	@echo "... src/rscode/rs.o"
+	@echo "... src/rscode/rs.i"
+	@echo "... src/rscode/rs.s"
 	@echo "... src/util/socket_utils.o"
 	@echo "... src/util/socket_utils.i"
 	@echo "... src/util/socket_utils.s"

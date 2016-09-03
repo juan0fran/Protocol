@@ -33,6 +33,9 @@ IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/src/util/cmake_install.cmake")
   INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/src/interfaces/cmake_install.cmake")
   INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/src/protocol/cmake_install.cmake")
+  INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/src/openfec/cmake_install.cmake")
+  INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/src/rscode/cmake_install.cmake")
+  INCLUDE("/Users/juan0fran/Desktop/C_Test/bin/apps/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 

@@ -7,9 +7,17 @@
 #include <assert.h>
 #include <sys/time.h>
 
+#include <interfaces/phy.h>
 #include <protocol/StopAndWait.h>
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
+
+static unsigned long long millitime() {
+    struct timeval te; 
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    return milliseconds;
+}
 
 static void printf_packet (BYTE * buff, int len){
 	printf("Length: %d ", len);
@@ -27,19 +35,41 @@ static void printf_packet (BYTE * buff, int len){
 
 /* Architecture/system dependant */
 
-int write_ack_to_phy(int fd, Status * s){
-	BYTE tosend [3];
-	int plen = 3;
+/* 	This physical layer is waiting for: 	
+		- 255 bytes FIXED SIZE packet (performs FEC with fixed length)
+	What we need back is:
+		- 1500 bytes MTU + Headers (at this moment 3 bytes): 1503 bytes
+	Transmitter -> 
+		- Encode 239 bytes payload into a 255 byte RS encoded packet
+		- On top of that, add a RS erasure code at packet level 
+		- Send N 255 bytes packets towards the sender 
+	Receiver ->
+		- Receive a 255 bytes packet from the receiver
+		- Decode 255 bytes RS packet into a 239 bytes payload
+		- Put the decoded packet into RS erasure code receiver
+		- When RS decoder returns OK -> Pass the packet to upper layer
+*/
+
+int write_ping_to_phy(int fd, Control * c, Status * s){
+	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
+	int len;
+	buffer[0] = 'I';
+	s->type = 'P';
+	len = 1;
+	write_packet_to_phy(fd, buffer, 1, c, s);
+	s->stored_len = len;
+	memcpy(s->stored_packet, buffer, len);
+	c->waiting_ack = true;
+	c->timeout = millitime();
+	return 0;
+}
+
+int write_ack_to_phy(int fd, Control * c, Status * s){
+	BYTE ack [1];
+	ack[0] = 0x55;
+	s->type = 'A';
+	write_packet_to_phy(fd, ack, 1, c, s);
 	/* first is the packet type */
-	tosend[0] = 'A';
-	/* Then the actual sequence number */
-	tosend[1] = s->sn;
-	/* Finally the actual request number */
-	tosend[2] = s->rn;
-	write(fd, &plen, sizeof(int));
-	printf("Sent ACK: ");
-	printf_packet(tosend, plen);
-	write(fd, tosend, plen);
 	return 0;
 }
 

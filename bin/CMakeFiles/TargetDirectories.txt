@@ -1,3 +1,8 @@
 /Users/juan0fran/Desktop/C_Test/bin/CMakeFiles/Net.dir
+/Users/juan0fran/Desktop/C_Test/bin/CMakeFiles/RS_Test.dir
 /Users/juan0fran/Desktop/C_Test/bin/CMakeFiles/Test.dir
+/Users/juan0fran/Desktop/C_Test/bin/CMakeFiles/Tun_Ctrl.dir
 /Users/juan0fran/Desktop/C_Test/bin/CMakeFiles/Tunnel.dir
+/Users/juan0fran/Desktop/C_Test/bin/src/openfec/CMakeFiles/openfec.dir
+/Users/juan0fran/Desktop/C_Test/bin/apps/CMakeFiles/simple_client.dir
+/Users/juan0fran/Desktop/C_Test/bin/apps/CMakeFiles/simple_server.dir

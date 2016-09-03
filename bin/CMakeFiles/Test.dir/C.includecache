@@ -89,6 +89,10 @@ string.h
 -
 time.h
 -
+fcntl.h
+-
+sys/ioctl.h
+-
 protocol/StopAndWait.h
 -
 util/socket_utils.h
@@ -122,19 +126,5 @@ interfaces/packet.h
 interfaces/phy.h
 -
 interfaces/net.h
--
-
-/Users/juan0fran/Desktop/C_Test/src/util/socket_utils.c
-stdio.h
--
-sys/socket.h
--
-sys/un.h
--
-stdlib.h
--
-string.h
--
-unistd.h
 -
 

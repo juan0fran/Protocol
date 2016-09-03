@@ -51,23 +51,23 @@ int main(int argc, char ** argv){
 	ufds[1].fd = net2;
 	ufds[1].events = POLLIN; // check for normal data
 	while(1){
-		if ((counter[0]+1) % 100 == 0){
-			sleep(5);
-		} 
-		rv = poll(ufds, 2, 500);
+		if ((counter[0]) == 5000){
+			exit(0);
+		}
+		rv = poll(ufds, 2, 25);
 		if (rv == -1){
 			perror("poll");
 			/* just return ... */
 		}else if(rv == 0){
 			/* If there is nothing, put some in a net */
-			if (HasToBeSent(50)){
+			if (HasToBeSent(0)){
 				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[0]);
 				printf("Sending from 0: %s", buffer);
 				len = strlen((const char *)buffer) + 1;
 				write(net1, &len, sizeof(int));
 				write(net1, buffer, len);
 			}
-			if(HasToBeSent(50)){
+			if(HasToBeSent(0)){
 				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[1]);
 				printf("Sending from 1: %s", buffer);
 				len = strlen((const char *)buffer) + 1;

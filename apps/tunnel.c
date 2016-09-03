@@ -103,7 +103,7 @@ int main(int argc, char ** argv){
 			}
 			/* We write the packet, but we simulate a delay */
 			/* Transmission time is aprox 250 ms */
-			usleep(10 * 1000);
+			usleep(5 * 1000);
 		}
 	}
 }

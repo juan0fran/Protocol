@@ -1,1 +1,1 @@
-/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/Net.dir/apps/net.c.o CMakeFiles/Net.dir/src/util/socket_utils.c.o  -o Net  
+/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/Net.dir/apps/net.c.o CMakeFiles/Net.dir/src/util/socket_utils.c.o  -o Net  -L/Users/juan0fran/Desktop/C_Test/bin  

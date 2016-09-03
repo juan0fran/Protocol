@@ -64,10 +64,16 @@
  * Simulation parameters...
  * Change as required
  */
+#if 0
 #define SYMBOL_SIZE	1024		/* symbol size, in bytes (must be multiple of 4 in this simple example) */
 #define	DEFAULT_K	100		/* default k value */
 #define CODE_RATE	0.667		/* k/n = 2/3 means we add 50% of repair symbols */
 #define LOSS_RATE	0.30		/* we consider 30% of packet losses... It assumes there's no additional loss during UDP transmissions */
+#endif
+#define DEFAULT_K 100
+#define CODE_RATE	1.0
+#define LOSS_RATE	0.0
+#define SYMBOL_SIZE	1024
 
 #define VERBOSITY	2		/* Define the verbosity level:
 					 *	0 : no trace

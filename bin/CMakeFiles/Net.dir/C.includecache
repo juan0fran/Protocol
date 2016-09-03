@@ -38,17 +38,3 @@ time.h
 string.h
 -
 
-/Users/juan0fran/Desktop/C_Test/src/util/socket_utils.c
-stdio.h
--
-sys/socket.h
--
-sys/un.h
--
-stdlib.h
--
-string.h
--
-unistd.h
--
-

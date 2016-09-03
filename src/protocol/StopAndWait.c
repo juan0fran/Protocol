@@ -13,11 +13,10 @@
 #include <interfaces/phy.h>
 #include <interfaces/net.h>
 
-unsigned long long millitime() {
+static unsigned long long millitime() {
     struct timeval te; 
     gettimeofday(&te, NULL); // get current time
     long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
-    // printf("milliseconds: %lld\n", milliseconds);
     return milliseconds;
 }
 
@@ -100,7 +99,7 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 				s->sn = rs.rn;
 				s->rn = (s->rn + 1)%2;
 				c->last_link = time(NULL);
-				write_ack_to_phy(c->phy_fd, s);
+				write_ack_to_phy(c->phy_fd, c, s);
 				connect_done = 1;
 			}
 		}else{
@@ -145,7 +144,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 						write_to_net(c->net_fd, recv_buffer, len);
 						s->rn = (s->rn + 1)%2;
 						c->last_link = time(NULL);
-						write_ack_to_phy(c->phy_fd, s);
+						write_ack_to_phy(c->phy_fd, c, s);
 					}
 				}
 			}
@@ -179,29 +178,28 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		rv = poll(&ufds[1], 1, c->packet_timeout_time);
 	}else{
 		printf("Waiting for some packet from NET or PHY\n");
-		rv = poll(ufds, 2, c->death_link_time);
-		if (rv == -1){
-			printf("tenemos un problema broh\n");
-		}
+		rv = poll(ufds, 2, c->ping_link_time);
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
 		perror("Error waiting for event: ");
+		return IO_ERROR;
 	}else if(rv == 0){
 		/* Resend Frame */
-		printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
 		if (c->waiting_ack == true){
+			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
 			s->type = 'D';
 			if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 				printf("Error writing\n");
 				return IO_ERROR;
 			}
 		}
+		return NO_ERROR;
 	}else{
 		/* Check the timeout */
 		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
 			printf("Something at the NET that can be read\n");
-			/* Something in Network Layer -> this has priority */
+			/* Something in Network Layer -> this has priority when not waiting for ACK */
 			/* Do stop and wait SEND */
 			if (len = read_packet_from_net(c->net_fd, buffer, 0), len < 0){
 				printf("Error reading\n");
@@ -238,6 +236,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				printf("Error reading\n");
 				return IO_ERROR;
 			}
+			/* Now is time to check wheter is that */
 			if (rs.type == 'C' && c->master_slave_flag == SLAVE){
 				printf("We are in troubles, master asks for reconnect\n");
 				printf("Waiting flag was: %d\n", c->waiting_ack);
@@ -250,22 +249,29 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				s->sn = rs.rn;
 				c->waiting_ack = false;
 				c->last_link = time(NULL);
-				if (rs.type == 'D' && rs.sn == s->rn){
-					printf("Sending packet towards the network. Received a piggybacking ACK\n");
-					check_headers_net(buffer, &len);
-					write_to_net(c->net_fd, buffer, len);
-					/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
-					rv = poll(&ufds[0], 1, 0);
-					if (rv == -1){
-						perror("poll inside function: ");
-					}else if (rv == 0){
-						s->rn = (s->rn + 1)%2;
-						c->last_link = time(NULL);
-						write_ack_to_phy(c->phy_fd, s);
-					}else{
-						s->rn = (s->rn + 1)%2;
-						c->last_link = time(NULL);
+				if (rs.sn == s->rn){
+					if (rs.type == 'D'){
+						printf("Sending packet towards the network. Received a piggybacking ACK\n");
+						check_headers_net(buffer, &len);
+						write_to_net(c->net_fd, buffer, len);
+						/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
+						rv = poll(&ufds[0], 1, 0);
+						if (rv == -1){
+							perror("poll inside function: ");
+							return IO_ERROR;
+						}else if (rv == 0){
+							s->rn = (s->rn + 1)%2;
+							c->last_link = time(NULL);
+							write_ack_to_phy(c->phy_fd, c, s);
+							return NO_ERROR;
+						}else{
+							s->rn = (s->rn + 1)%2;
+							c->last_link = time(NULL);
+							return NO_ERROR;
+						}
+						/* Prevent from going to rs.sn == s->rn from bottom, since we already entered */
 					}
+					return NO_ERROR;
 				}
 			}
 			if (rs.sn == s->rn){
@@ -280,18 +286,23 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 						rv = poll(&ufds[0], 1, 0);
 						if (rv == -1){
 							perror("poll inside function: ");
+							return IO_ERROR;
 						}else if (rv == 0){
 							s->rn = (s->rn + 1)%2;
 							c->last_link = time(NULL);
-							write_ack_to_phy(c->phy_fd, s);
+							write_ack_to_phy(c->phy_fd, c, s);
+							return NO_ERROR;
 						}else{
 							s->rn = (s->rn + 1)%2;
 							c->last_link = time(NULL);
+							return NO_ERROR;
 						}
-					}else if (rs.type == 'C'){
+					}
+					if (rs.type == 'C'){
 						s->rn = (s->rn + 1)%2;
 						c->last_link = time(NULL);
-						write_ack_to_phy(c->phy_fd, s);
+						write_ack_to_phy(c->phy_fd, c, s);
+						return NO_ERROR;
 					}
 				}else{
 					if (rs.type == 'D'){
@@ -299,15 +310,15 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 						check_headers_net(buffer, &len);
 						write_to_net(c->net_fd, buffer, len);
 						s->rn = (s->rn + 1)%2;
-						write_ack_to_phy(c->phy_fd, s);
 						c->last_link = time(NULL);	
-					}else{
-						write_ack_to_phy(c->phy_fd, s);
+						write_ack_to_phy(c->phy_fd, c, s);
+						return NO_ERROR;
 					}
 				}
 			}else{
 				if (rs.type == 'D' || rs.type == 'C'){
-					write_ack_to_phy(c->phy_fd, s);
+					write_ack_to_phy(c->phy_fd, c, s);
+					return NO_ERROR;
 				}
 			}
 			/* This cannot be a corrupted frame */
@@ -327,6 +338,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					c->waiting_ack = true;	
 					/* Start the timeout */
 					c->timeout = millitime();		
+					return NO_ERROR;
 				}
 			}
 		}

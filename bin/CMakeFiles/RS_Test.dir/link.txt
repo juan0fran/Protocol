@@ -1,0 +1,1 @@
+/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/RS_Test.dir/apps/example.c.o CMakeFiles/RS_Test.dir/src/rscode/berlekamp.c.o CMakeFiles/RS_Test.dir/src/rscode/crcgen.c.o CMakeFiles/RS_Test.dir/src/rscode/galois.c.o CMakeFiles/RS_Test.dir/src/rscode/rs.c.o  -o RS_Test  -L/Users/juan0fran/Desktop/C_Test/bin  

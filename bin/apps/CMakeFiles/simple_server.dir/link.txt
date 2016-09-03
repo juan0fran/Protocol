@@ -1,0 +1,1 @@
+/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/simple_server.dir/simple_server.c.o  -o ../simple_server  ../libopenfec.1.4.2.dylib -lm 

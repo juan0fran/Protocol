@@ -12,11 +12,6 @@
 
 typedef unsigned char BYTE;
 
-typedef enum ProtocolDataEvent{
-	new_packet_from_phy,
-	new_packet_from_network,
-}ProtocolDataEvent;
-
 typedef enum ProtocolControlEvent{
 	initialise_link,
 	check_link_availability,
@@ -29,24 +24,24 @@ typedef enum MSFLAG{
 }MSFLAG;
 
 typedef struct Control{
-	int initialised;
-	int death_link_time;
-	int packet_timeout_time; /* in ms -> not used inside the structure, pending to be removed */
+	int initialised;			/* 0 uninitialised, 1 initialised */
+	int ping_link_time;			/* in ms */
+	int death_link_time;		/* in ms */
+	int packet_timeout_time; 	/* in ms */
 	MSFLAG master_slave_flag;
 	int net_fd;
 	int phy_fd;
-	bool waiting_ack;
-	unsigned long long timeout; /* timeout in ms */
-	time_t 		last_link;
+	bool waiting_ack;			/* true or false */
+	unsigned long long timeout; /* in ms */
+	time_t 		last_link;		/* last connection timestamp (epoch in seconds) */
 }Control;
 
 typedef struct Status{
-	int 		rx;
-	uint8_t 	type;
-	uint8_t 	sn;
-	uint8_t 	rn;
-	BYTE		stored_packet[MTU_SIZE + MTU_OVERHEAD];
-	int 		stored_len;
+	uint8_t 	type;		/* packet type */
+	uint8_t 	sn;			/* sequence number */
+	uint8_t 	rn;			/* request number */
+	BYTE		stored_packet[MTU_SIZE + MTU_OVERHEAD]; /* stored packet to forward if requested */
+	int 		stored_len;	/* stored packet len to forward if requested */
 }Status;
 
 #endif

@@ -70,7 +70,8 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 			exit(-1);
 		}
 		control.initialised = 0;
-		control.packet_timeout_time = 100; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.ping_link_time = 2500;
+		control.packet_timeout_time = 20; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.death_link_time = 10000; /* in ms */ /* after 10 seconds without handshake, test again */
 		printf("The two socket are initialised\n");
 		physical_layer_control();

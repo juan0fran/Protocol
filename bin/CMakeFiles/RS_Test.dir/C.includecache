@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/rscode/ecc.h
+
+/Users/juan0fran/Desktop/C_Test/apps/example.c
+stdio.h
+-
+stdlib.h
+-
+rscode/ecc.h
+-
+
