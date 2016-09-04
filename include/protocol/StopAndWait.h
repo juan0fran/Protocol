@@ -8,7 +8,8 @@ typedef enum ErrorHandler{
 	NO_LINK,
 }ErrorHandler;
 
-ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, Status * s);
+ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control * c, Status * s);
+ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s);
 ErrorHandler StopAndWait(Control * c, Status * s);
 
 #endif

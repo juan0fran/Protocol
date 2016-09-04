@@ -14,7 +14,7 @@
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
 
-int input_timeout (int filedes, unsigned int seconds){
+int input_timeout (int filedes, unsigned int milliseconds){
 	fd_set set;
 	struct timeval timeout;
 	/* Initialize the file descriptor set. */
@@ -22,8 +22,8 @@ int input_timeout (int filedes, unsigned int seconds){
 	FD_SET (filedes, &set);
 
 	/* Initialize the timeout data structure. */
-	timeout.tv_sec = seconds;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = milliseconds;
 
 	/* select returns 0 if timeout, 1 if input available, -1 if error. */
 	return (select (FD_SETSIZE, &set, NULL, NULL, &timeout));
@@ -48,7 +48,7 @@ int main(int argc, char ** argv){
 	/* Set up iface */
 	printf("Client has been initialised\n");
 	while(1){
-		if (input_timeout(to_net, 0) > 0) {	
+		if (input_timeout(to_net, 10) > 0) {	
 			ret = read(to_net, buffer, MTU_SIZE);
 			if (ret > 0){
 				printf("Read from upper layers -> Len: %d\n", ret);
@@ -58,7 +58,7 @@ int main(int argc, char ** argv){
 		}
 		pfd.fd = from_net;
 		pfd.events = POLLIN;
-		rv = poll(&pfd, 1, 0);
+		rv = poll(&pfd, 1, 10);
 		if (rv == -1){
 			perror("poll");
 			return -1;

@@ -23,11 +23,12 @@ void physical_layer_control(){
 	/* Connect to a physical layer -> simulated as we are a socket client */
 	/* Connect to a network layer -> simulated as we are a socket client */
 	ErrorHandler err;
+	int counter;
 	while(1){
 		while (control.initialised == 0){
 			/* Until it is not initialised, try to initilise */
 			printf("Going to initialise the link\n");
-			err = protocol_control_routine(initialise_link, &control, &status);
+			err = protocol_establishment_routine(initialise_link, &control, &status);
 			if (err == IO_ERROR){
 				printf("Error at protocol control: %d\n", err);
 				return;
@@ -35,21 +36,33 @@ void physical_layer_control(){
 			printf("Control initialised: %d\n", control.initialised);
 		}
 		/* The link is initialised now! We have connection ;) */
-		err = protocol_control_routine(check_link_availability, &control, &status);
+		err = protocol_establishment_routine(check_link_availability, &control, &status);
 		if (err == IO_ERROR){
 			printf("Error at protocol control: %d\n", err);
 			return;
 		}
+		counter = 0;
 		while (control.initialised == 1){
 			err = StopAndWait(&control, &status);
 			if (err != NO_ERROR){
 				printf("Error at S&W protocol: %d\n", err);
 				return;
 			}
-			err = protocol_control_routine(check_link_availability, &control, &status);
+			err = protocol_establishment_routine(check_link_availability, &control, &status);
 			if (err == IO_ERROR){
 				printf("Error at protocol control: %d\n", err);
 				return;
+			}
+			/* basically, we will try to send a control frame every 10 times we are here */
+			counter++;
+			if (counter == 10){
+				counter = 0;
+				/* set control frame */
+				err = protocol_control_routine(NULL, &control, &status);
+				if (err == IO_ERROR){
+					printf("Error at protocol control: %d\n", err);
+					return;
+				}
 			}
 		}
 	}

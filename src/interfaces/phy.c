@@ -50,20 +50,6 @@ static void printf_packet (BYTE * buff, int len){
 		- When RS decoder returns OK -> Pass the packet to upper layer
 */
 
-int write_ping_to_phy(int fd, Control * c, Status * s){
-	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
-	int len;
-	buffer[0] = 'I';
-	s->type = 'P';
-	len = 1;
-	write_packet_to_phy(fd, buffer, 1, c, s);
-	s->stored_len = len;
-	memcpy(s->stored_packet, buffer, len);
-	c->waiting_ack = true;
-	c->timeout = millitime();
-	return 0;
-}
-
 int write_ack_to_phy(int fd, Control * c, Status * s){
 	BYTE ack [1];
 	ack[0] = 0x55;

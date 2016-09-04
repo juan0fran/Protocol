@@ -23,7 +23,35 @@ static unsigned long long millitime() {
 static ErrorHandler Connect_Master(Control * c, Status * s);
 static ErrorHandler Connect_Slave(Control * c, Status * s);
 
-ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, Status * s){
+ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s) {
+	ErrorHandler ret;
+	/* Routine to send control frames to the other peer */
+	/* We shall not be waiting an ACK before sending a control frame */
+	if (c->waiting_ack == false){
+		/* We can send the control frame */
+		s->type = 'P'; /* i.e. P will be a control frame */
+		BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
+		int len;
+		/* put the control information inside */
+		buffer[0] = 'A';
+		buffer[1] = 'B';
+		len = 2;
+		if (write_packet_to_phy(c->phy_fd, buffer, len, c, s) != NO_ERROR){
+			printf("Error writing\n");
+			return IO_ERROR;
+		}
+		s->stored_type = s->type;
+		s->stored_len = len;
+		memcpy(s->stored_packet, buffer, len);
+		c->waiting_ack = true;
+		/* We are waiting an ACK now!! */
+		/* Start the timeout */
+		c->timeout = millitime();
+	}
+	return NO_ERROR;
+}
+
+ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control * c, Status * s){
 	ErrorHandler ret;
 	switch (event){
 		case initialise_link:
@@ -35,7 +63,7 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 				if (ret == NO_ERROR){
 					c->initialised = 1;
 					c->waiting_ack = false;
-					c->last_link = time(NULL);
+					c->last_link = millitime();
 				}else if (ret == IO_ERROR){
 					return IO_ERROR;
 				}else{
@@ -46,7 +74,7 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 				if (ret == NO_ERROR){
 					c->initialised = 1;
 					c->waiting_ack = false;
-					c->last_link = time(NULL);
+					c->last_link = millitime();
 				}else if (ret == IO_ERROR){
 					return IO_ERROR;
 				}else{
@@ -58,8 +86,19 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 			/* Make a connection test */
 			if (c->last_link == 0){
 				c->initialised = 0;
-			}else if ( ((int) (time(NULL) - c->last_link )) * 1000 >= c->death_link_time){
-				printf("Last link was: %lu. Now we are: %lu\n", c->last_link, time(NULL));
+			/* now we can implement the ping... */
+			}else if ( ((int) (millitime() - c->last_link )) < c->death_link_time){
+				if (((int) (millitime() - c->last_link )) >= c->ping_link_time){
+					/* Still not death but in ping time */
+					/* Make a control frame send */
+					ret = protocol_control_routine(NULL, c, s);
+					if (ret == IO_ERROR){
+						printf("Error at protocol control: %d\n", ret);
+						return ret;
+					}
+				}
+			}else if ( ((int) (millitime() - c->last_link )) >= c->death_link_time){
+				printf("Last link was: %llu. Now we are: %llu\n", c->last_link, millitime());
 				printf("link is dead -> set control.initialised to 0, return -1\n");
 				c->initialised = 0;
 			}else{
@@ -69,6 +108,8 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 		break;
 		case desconnect_link:
 			/* Three way handshake, if it is done -> unset initialised */
+		break;
+		default:
 		break;
 	}
 	return NO_ERROR;
@@ -98,7 +139,7 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 			if (rs.type == 'C'){
 				s->sn = rs.rn;
 				s->rn = (s->rn + 1)%2;
-				c->last_link = time(NULL);
+				c->last_link = millitime();
 				write_ack_to_phy(c->phy_fd, c, s);
 				connect_done = 1;
 			}
@@ -129,7 +170,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 				s->sn = rs.sn;
 				s->rn = rs.rn;
 				s->rn = (s->rn + 1)%2;
-				c->last_link = time(NULL);
+				c->last_link = millitime();
 				if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
 					printf("Error writing\n");
 					return IO_ERROR;
@@ -143,7 +184,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 						printf("Connection from slave (ACK) has been done frome piggybacking packet\n");
 						write_to_net(c->net_fd, recv_buffer, len);
 						s->rn = (s->rn + 1)%2;
-						c->last_link = time(NULL);
+						c->last_link = millitime();
 						write_ack_to_phy(c->phy_fd, c, s);
 					}
 				}
@@ -188,7 +229,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		/* Resend Frame */
 		if (c->waiting_ack == true){
 			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
-			s->type = 'D';
+			s->type = s->stored_type;
+			/* Care!, maybe is not type D */
 			if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 				printf("Error writing\n");
 				return IO_ERROR;
@@ -216,6 +258,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					printf("Error writing\n");
 					return IO_ERROR;
 				}
+				s->stored_type = s->type;
 				s->stored_len = len;
 				memcpy(s->stored_packet, buffer, len);
 				c->waiting_ack = true;
@@ -248,12 +291,18 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				printf("Good packet while waiting for ACK. s->sn updated\n");
 				s->sn = rs.rn;
 				c->waiting_ack = false;
-				c->last_link = time(NULL);
+				c->last_link = millitime();
 				if (rs.sn == s->rn){
-					if (rs.type == 'D'){
-						printf("Sending packet towards the network. Received a piggybacking ACK\n");
-						check_headers_net(buffer, &len);
-						write_to_net(c->net_fd, buffer, len);
+					/* Data or Control */
+					if (rs.type == 'D' || rs.type == 'P'){
+						if (rs.type == 'D'){
+							printf("Sending packet towards the network. Received a piggybacking ACK\n");
+							check_headers_net(buffer, &len);
+							write_to_net(c->net_fd, buffer, len);
+						}else if (rs.type == 'P'){
+							printf("Control Packet arrived-> ");
+							printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+						}
 						/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
 						rv = poll(&ufds[0], 1, 0);
 						if (rv == -1){
@@ -261,12 +310,12 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 							return IO_ERROR;
 						}else if (rv == 0){
 							s->rn = (s->rn + 1)%2;
-							c->last_link = time(NULL);
+							c->last_link = millitime();
 							write_ack_to_phy(c->phy_fd, c, s);
 							return NO_ERROR;
 						}else{
 							s->rn = (s->rn + 1)%2;
-							c->last_link = time(NULL);
+							c->last_link = millitime();
 							return NO_ERROR;
 						}
 						/* Prevent from going to rs.sn == s->rn from bottom, since we already entered */
@@ -278,10 +327,15 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				if (c->waiting_ack == false){
 					/* Aquí no entro nunca broh */
 					printf("Received sn == rn and waiting_ack == false\n");
-					if (rs.type == 'D'){
-						printf("Sending packet towards the network\n");
-						check_headers_net(buffer, &len);
-						write_to_net(c->net_fd, buffer, len);
+					if (rs.type == 'D' || rs.type == 'P'){
+						if (rs.type == 'D'){
+							printf("Sending packet towards the network\n");
+							check_headers_net(buffer, &len);
+							write_to_net(c->net_fd, buffer, len);
+						}else if (rs.type == 'P'){
+							printf("Control Packet arrived-> ");
+							printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+						}
 						/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
 						rv = poll(&ufds[0], 1, 0);
 						if (rv == -1){
@@ -289,34 +343,39 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 							return IO_ERROR;
 						}else if (rv == 0){
 							s->rn = (s->rn + 1)%2;
-							c->last_link = time(NULL);
+							c->last_link = millitime();
 							write_ack_to_phy(c->phy_fd, c, s);
 							return NO_ERROR;
 						}else{
 							s->rn = (s->rn + 1)%2;
-							c->last_link = time(NULL);
+							c->last_link = millitime();
 							return NO_ERROR;
 						}
 					}
 					if (rs.type == 'C'){
 						s->rn = (s->rn + 1)%2;
-						c->last_link = time(NULL);
+						c->last_link = millitime();
 						write_ack_to_phy(c->phy_fd, c, s);
 						return NO_ERROR;
 					}
 				}else{
-					if (rs.type == 'D'){
-						printf("Sending packet towards the network while waiting for ACK\n");
-						check_headers_net(buffer, &len);
-						write_to_net(c->net_fd, buffer, len);
+					if (rs.type == 'D' || rs.type == 'P'){
+						if (rs.type == 'D'){
+							printf("Sending packet towards the network while waiting for ACK\n");
+							check_headers_net(buffer, &len);
+							write_to_net(c->net_fd, buffer, len);
+						}else if (rs.type == 'P'){
+							printf("Control Packet arrived-> ");
+							printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+						}
 						s->rn = (s->rn + 1)%2;
-						c->last_link = time(NULL);	
+						c->last_link = millitime();	
 						write_ack_to_phy(c->phy_fd, c, s);
 						return NO_ERROR;
 					}
 				}
 			}else{
-				if (rs.type == 'D' || rs.type == 'C'){
+				if (rs.type == 'D' || rs.type == 'P' || rs.type == 'C'){
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}
@@ -330,7 +389,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				if (c->timeout >= c->packet_timeout_time){
 					/* Resend Frame */
 					printf("Timeout waiting for ACK but something triggered us\n");	
-					s->type = 'D';
+					s->stored_type = s->type;
 					if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 						printf("Error writing\n");
 						return IO_ERROR;

@@ -24,16 +24,16 @@ typedef enum MSFLAG{
 }MSFLAG;
 
 typedef struct Control{
-	int initialised;			/* 0 uninitialised, 1 initialised */
-	int ping_link_time;			/* in ms */
-	int death_link_time;		/* in ms */
-	int packet_timeout_time; 	/* in ms */
-	MSFLAG master_slave_flag;
-	int net_fd;
-	int phy_fd;
-	bool waiting_ack;			/* true or false */
-	unsigned long long timeout; /* in ms */
-	time_t 		last_link;		/* last connection timestamp (epoch in seconds) */
+	int 					initialised;			/* 0 uninitialised, 1 initialised */
+	int 					ping_link_time;			/* in ms */
+	int 					death_link_time;		/* in ms */
+	int 					packet_timeout_time; 	/* in ms */
+	MSFLAG 					master_slave_flag;		
+	int 					net_fd;
+	int 					phy_fd;
+	bool 					waiting_ack;			/* true or false */
+	unsigned long long 		timeout; 				/* in ms */
+	unsigned long long 		last_link;				/* last connection timestamp (epoch in milliseconds) */
 }Control;
 
 typedef struct Status{
@@ -42,6 +42,7 @@ typedef struct Status{
 	uint8_t 	rn;			/* request number */
 	BYTE		stored_packet[MTU_SIZE + MTU_OVERHEAD]; /* stored packet to forward if requested */
 	int 		stored_len;	/* stored packet len to forward if requested */
+	uint8_t 	stored_type;
 }Status;
 
 #endif
