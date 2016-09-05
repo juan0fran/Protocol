@@ -13,6 +13,8 @@
 #include <inttypes.h>
 #include <termios.h> 
 
+#define __USE_SOCAT__
+
 typedef struct serial_s
 {
 	int sock_fd;
