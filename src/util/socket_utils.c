@@ -5,6 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/ioctl.h> /* ioctl() */
+#include <linux/if.h>
+#include <linux/if_tun.h>
+
 int initialise_client_socket(char * socket_path){
 	int fd;
 	struct sockaddr_un addr;
