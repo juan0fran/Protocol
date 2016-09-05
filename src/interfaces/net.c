@@ -12,6 +12,7 @@
 #include <interfaces/packet.h>
 
 //#define
+#undef __EXAMPLE_WITH_SOCAT__
 
 static void printf_packet (BYTE * buff, int len){
 	printf("Length: %d\n", len);

@@ -1,5 +1,5 @@
-#ifndef __PHY__H
-#define __PHY__H
+#ifndef __PHY_H__
+#define __PHY_H__
 
 #include <interfaces/packet.h>
 

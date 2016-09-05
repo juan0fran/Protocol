@@ -68,8 +68,8 @@ void physical_layer_control(){
 	}
 }
 
-int protocol_routine(char * sock_data_phy, char * sock_data_net){
-	
+int protocol_routine(char * sock_data_phy, char * sock_data_net char * ip){
+	char syscall[256];
 	while (1){
 		printf("Connect sockets\n");
 		control.phy_fd = initialise_server_socket(sock_data_phy);
@@ -77,6 +77,16 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 			perror("Openning phyfd: ");
 			exit(-1);
 		}
+		/* Before connecting the IFACE, set UP the IP */
+		sprintf(syscall, "ip tuntap del dev %s mode tun", sock_data_net);
+		system(syscall);
+		sprintf(syscall, "ip tuntap add dev %s mode tun", sock_data_net);
+		system(syscall);
+		sprintf(syscall, "ip addr add %s/24 dev %s", ip, sock_data_net);
+		system(syscall);
+		sprintf(syscall, "ip link set dev %s up", sock_data_net);
+		system(syscall);
+
   		control.net_fd = tun_alloc(sock_data_net);  /* tun interface */
 		/*control.net_fd = initialise_server_socket(sock_data_net);*/
 		if (control.net_fd == -1){
@@ -96,17 +106,17 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 }
 
 int main (int argc, char ** argv) {
-	if (argc != 4){
+	if (argc != 5){
 		exit(-1);
 	}
-	if (strcmp("master", argv[3]) == 0){
+	if (strcmp("master", argv[4]) == 0){
 		control.master_slave_flag = MASTER;
-	}else if (strcmp("slave", argv[3]) == 0){
+	}else if (strcmp("slave", argv[4]) == 0){
 		control.master_slave_flag = SLAVE;
 	}else{
 		exit(-1);
 	}
-	return (protocol_routine(argv[1], argv[2]));
+	return (protocol_routine(argv[1], argv[2], argv[3]));
 }
 
 
