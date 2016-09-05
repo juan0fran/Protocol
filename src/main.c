@@ -77,7 +77,9 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 			perror("Openning phyfd: ");
 			exit(-1);
 		}
-		control.net_fd = initialise_server_socket(sock_data_net);
+
+		control.net_fd = tun_open("tun0");
+		/*control.net_fd = initialise_server_socket(sock_data_net);*/
 		if (control.net_fd == -1){
 			perror("Opening netfd: ");
 			exit(-1);

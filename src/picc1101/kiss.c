@@ -149,7 +149,6 @@ uint8_t kiss_command(uint8_t *block)
     uint8_t command_code = block[1] & 0x0F;
     uint8_t kiss_port = (block[1] & 0xF0)>>4;
     uint8_t command_arg = block[2];
-
     verbprintf(4, "KISS: command %02X %02X\n", block[1], block[2]);
 
     switch (command_code)

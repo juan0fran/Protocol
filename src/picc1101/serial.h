@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include <termios.h> 
 
-#define __USE_SOCAT__
+//#define __USE_SOCAT__
 
 typedef struct serial_s
 {

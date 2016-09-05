@@ -6,7 +6,7 @@
 #include <poll.h>
 #include <assert.h>
 #include <sys/time.h>
-
+#include <stdint.h>
 #include <protocol/StopAndWait.h>
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
@@ -23,7 +23,7 @@ int write_to_net(int fd, BYTE * p, int len){
 #ifdef __EXAMPLE_WITH_SOCAT__
 	write(fd, p, len);
 #else
-	write(fd, &len, sizeof(int));
+	write(fd, &len, sizeof(int32_t));
 	write(fd, p, len);
 #endif
 	return 0;
@@ -52,8 +52,8 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 		if (pfd.revents & POLLIN){
 			/* In case of socat -> read until \n */
 		#ifndef __EXAMPLE_WITH_SOCAT__
-			ret = read(fd, &len, sizeof(int));
-			if (ret != sizeof(int))
+			ret = read(fd, &len, sizeof(int32_t));
+			if (ret != sizeof(int32_t))
 				return -1;
 			ret = read(fd, p, len);
 			if (ret > 0){

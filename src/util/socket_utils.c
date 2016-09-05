@@ -26,6 +26,31 @@ int initialise_client_socket(char * socket_path){
 	return fd;
 }
 
+/* open tun interface */
+int tun_open(char *devname)
+{
+  struct ifreq ifr;
+  int fd, err;
+
+  if ( (fd = open("/dev/net/tun", O_RDWR)) == -1 ) {
+       perror("open /dev/net/tun");exit(1);
+  }
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_flags = IFF_TUN;
+  strncpy(ifr.ifr_name, devname, IFNAMSIZ);  
+
+  /* ioctl will use if_name as the name of TUN 
+   * interface to open: "tun0", etc. */
+  if ( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) == -1 ) {
+    perror("ioctl TUNSETIFF");close(fd);exit(1);
+  }
+
+  /* After the ioctl call the fd is "connected" to tun device specified
+   * by devname */
+
+  return fd;
+}
+
 int initialise_server_socket(char * socket_path){
 	int fd;
 	int client_fd;
