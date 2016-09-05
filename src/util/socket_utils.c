@@ -31,30 +31,50 @@ int initialise_client_socket(char * socket_path){
 	return fd;
 }
 
-/* open tun interface */
-int tun_open(char *devname)
-{
+int tun_alloc(char *dev, int flags) {
+
   struct ifreq ifr;
   int fd, err;
+  char *clonedev = "/dev/net/tun";
 
-  if ( (fd = open("/dev/net/tun", O_RDWR)) == -1 ) {
-       perror("open /dev/net/tun");exit(1);
-  }
-  memset(&ifr, 0, sizeof(ifr));
-  ifr.ifr_flags = IFF_TUN;
-  strncpy(ifr.ifr_name, devname, IFNAMSIZ);  
+  /* Arguments taken by the function:
+   *
+   * char *dev: the name of an interface (or '\0'). MUST have enough
+   *   space to hold the interface name if '\0' is passed
+   * int flags: interface flags (eg, IFF_TUN etc.)
+   */
 
-  /* ioctl will use if_name as the name of TUN 
-   * interface to open: "tun0", etc. */
-  if ( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) == -1 ) {
-    perror("ioctl TUNSETIFF");close(fd);exit(1);
-  }
-    ioctl(fd, TUNSETNOCSUM, 1);
-	fcntl(fd, F_SETFL, O_NONBLOCK | O_ASYNC);
+   /* open the clone device */
+   if( (fd = open(clonedev, O_RDWR)) < 0 ) {
+     return fd;
+   }
 
-  /* After the ioctl call the fd is "connected" to tun device specified
-   * by devname */
+   /* preparation of the struct ifr, of type "struct ifreq" */
+   memset(&ifr, 0, sizeof(ifr));
 
+   ifr.ifr_flags = flags;   /* IFF_TUN or IFF_TAP, plus maybe IFF_NO_PI */
+
+   if (*dev) {
+     /* if a device name was specified, put it in the structure; otherwise,
+      * the kernel will try to allocate the "next" device of the
+      * specified type */
+     strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+   }
+
+   /* try to create the device */
+   if( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+     close(fd);
+     return err;
+   }
+
+  /* if the operation was successful, write back the name of the
+   * interface to the variable "dev", so the caller can know
+   * it. Note that the caller MUST reserve space in *dev (see calling
+   * code below) */
+  strcpy(dev, ifr.ifr_name);
+
+  /* this is the special file descriptor that the caller will use to talk
+   * with the virtual interface */
   return fd;
 }
 

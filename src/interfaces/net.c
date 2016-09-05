@@ -76,7 +76,8 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			}
 		#endif
 			printf("Received packet from net-> ");
-			printf_packet(p, len);
+			//printf_packet(p, len);
+			printf("Read %d bytes from device %s\n", nread, "tun0");
 			return len;
 		}	
 		/* packet read! */

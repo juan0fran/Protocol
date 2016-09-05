@@ -77,8 +77,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 			perror("Openning phyfd: ");
 			exit(-1);
 		}
-
-		control.net_fd = tun_open("tun0");
+  		control.net_fd = tun_alloc(sock_data_net, IFF_TUN | IFF_NO_PI);  /* tun interface */
 		/*control.net_fd = initialise_server_socket(sock_data_net);*/
 		if (control.net_fd == -1){
 			perror("Opening netfd: ");
@@ -86,7 +85,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net){
 		}
 		control.initialised = 0;
 		control.ping_link_time = 2500;
-		control.packet_timeout_time = 20; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.packet_timeout_time = 1000; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.death_link_time = 10000; /* in ms */ /* after 10 seconds without handshake, test again */
 		printf("The two socket are initialised\n");
 		physical_layer_control();
