@@ -68,7 +68,7 @@ void physical_layer_control(){
 	}
 }
 
-int protocol_routine(char * sock_data_phy, char * sock_data_net char * ip){
+int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 	char syscall[256];
 	while (1){
 		printf("Connect sockets\n");
