@@ -54,16 +54,15 @@ void physical_layer_control(){
 				return;
 			}
 			/* basically, we will try to send a control frame every 10 times we are here */
-			counter++;
+			/*counter++;
 			if (counter == 10){
 				counter = 0;
-				/* set control frame */
 				err = protocol_control_routine(NULL, &control, &status);
 				if (err == IO_ERROR){
 					printf("Error at protocol control: %d\n", err);
 					return;
 				}
-			}
+			}*/
 		}
 	}
 }
@@ -95,7 +94,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 		}
 		control.initialised = 0;
 		control.ping_link_time = 2500;
-		control.packet_timeout_time = 1000; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.packet_timeout_time = 500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.death_link_time = 10000; /* in ms */ /* after 10 seconds without handshake, test again */
 		printf("The two socket are initialised\n");
 		physical_layer_control();
