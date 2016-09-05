@@ -3,6 +3,6 @@
 
 int initialise_server_socket(char * socket_path);
 int initialise_client_socket(char * socket_path);
-int tun_open(char *devname);
+int tun_alloc(char *dev);
 
 #endif
