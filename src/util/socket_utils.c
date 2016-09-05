@@ -49,6 +49,8 @@ int tun_open(char *devname)
   if ( (err = ioctl(fd, TUNSETIFF, (void *) &ifr)) == -1 ) {
     perror("ioctl TUNSETIFF");close(fd);exit(1);
   }
+    ioctl(fd, TUNSETNOCSUM, 1);
+	fcntl(fd, F_SETFL, O_NONBLOCK | O_ASYNC);
 
   /* After the ioctl call the fd is "connected" to tun device specified
    * by devname */
