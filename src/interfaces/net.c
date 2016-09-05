@@ -23,7 +23,7 @@ int write_to_net(int fd, BYTE * p, int len){
 #ifdef __EXAMPLE_WITH_SOCAT__
 	write(fd, p, len);
 #else
-	write(fd, &len, sizeof(int32_t));
+	//write(fd, &len, sizeof(int32_t));
 	write(fd, p, len);
 #endif
 	return 0;
@@ -52,15 +52,15 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 		if (pfd.revents & POLLIN){
 			/* In case of socat -> read until \n */
 		#ifndef __EXAMPLE_WITH_SOCAT__
-			ret = read(fd, &len, sizeof(int32_t));
-			if (ret != sizeof(int32_t))
-				return -1;
-			ret = read(fd, p, len);
-			if (ret > 0){
+			/* ret = read(fd, &len, sizeof(int32_t)); */
+			/* if (ret != sizeof(int32_t))
+				return -1; */
+			ret = read(fd, p, MTU_SIZE);
+			/*if (ret > 0){
 				while (ret != len){
 					ret += read(fd, p+ret, len);
 				}
-			}
+			}*/
 		#else
 			ret = 0;
 			len = read(fd, p, 1);
