@@ -36,7 +36,7 @@ int tun_alloc(char *dev){
   int fd, err;
 
   if( (fd = open("/dev/net/tun", O_RDWR)) < 0 )
-     return tun_alloc_old(dev);
+     return -1;
 
   memset(&ifr, 0, sizeof(ifr));
 
