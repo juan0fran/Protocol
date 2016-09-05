@@ -128,6 +128,7 @@ speed_t get_serial_speed(uint32_t speed, uint32_t *speed_n)
 int openUnixSocket(char * sock_path){
     struct sockaddr_un addr;
     int fd;
+    int client_fd;
     if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");
         exit(EXIT_FAILURE);
@@ -154,7 +155,7 @@ int openUnixSocket(char * sock_path){
         perror("accept error");
         exit(-1);
     }
-    return fd;
+    return client_fd;
 }
 
 void set_serial_parameters(serial_t *serial_parameters, arguments_t *arguments)
