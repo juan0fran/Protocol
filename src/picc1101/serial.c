@@ -163,6 +163,9 @@ int write_serial(serial_t *serial_parameters, char *msg, int msglen)
 {
     /* write msglen as int32_t, then write the message */
     int32_t len = (int32_t) msglen;
+    #ifdef __USE_SOCAT__
+    return write(serial_parameters->sock_fd, msg, len);
+    #else
     int ret = write(serial_parameters->sock_fd, &len, sizeof(int32_t));
     if (ret > 0){
         return write(serial_parameters->sock_fd, msg, len);
@@ -170,6 +173,7 @@ int write_serial(serial_t *serial_parameters, char *msg, int msglen)
         printf("Error writing\n");
         exit(EXIT_FAILURE);
     }
+    #endif
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -190,6 +194,9 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
     }else if (rv == 0){
         return 0;
     }else{
+        #ifdef __USE_SOCAT__
+        return read(pfd.fd, buf, buflen);
+        #else
         if (read(pfd.fd, &len, sizeof(int32_t)) > 0){
             if (len <= buflen){
                  readed = read(pfd.fd, buf, len);
@@ -203,6 +210,7 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
         }else{
             return 0;
         }
+        #endif
     }
 } 
 
