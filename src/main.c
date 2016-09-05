@@ -72,7 +72,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 	char syscall[256];
 	while (1){
 		printf("Connect sockets\n");
-		control.phy_fd = initialise_server_socket(sock_data_phy);
+		control.phy_fd = initialise_client_socket(sock_data_phy);
 		if (control.phy_fd == -1){
 			perror("Openning phyfd: ");
 			exit(-1);
