@@ -56,6 +56,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* if (ret != sizeof(int32_t))
 				return -1; */
 			ret = read(fd, p, MTU_SIZE);
+			len = ret;
 			/*if (ret > 0){
 				while (ret != len){
 					ret += read(fd, p+ret, len);
@@ -77,7 +78,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 		#endif
 			printf("Received packet from net-> ");
 			//printf_packet(p, len);
-			printf("Read %d bytes from device %s\n", nread, "tun0");
+			printf("Read %d bytes from device %s\n", len, "tun0");
 			return len;
 		}	
 		/* packet read! */
