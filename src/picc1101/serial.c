@@ -149,6 +149,11 @@ int openUnixSocket(char * sock_path){
         perror("listen error");
         exit(EXIT_FAILURE);
     }
+
+    if ( (client_fd = accept(fd, NULL, NULL)) == -1) {
+        perror("accept error");
+        exit(-1);
+    }
     return fd;
 }
 
@@ -194,23 +199,25 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
     }else if (rv == 0){
         return 0;
     }else{
-        #ifdef __USE_SOCAT__
-        return read(pfd.fd, buf, buflen);
-        #else
-        if (read(pfd.fd, &len, sizeof(int32_t)) > 0){
-            if (len <= buflen){
-                 readed = read(pfd.fd, buf, len);
-                 while(readed != len){
-                    readed += read(pfd.fd, buf+readed, len-readed);
-                 }
-                 return len;
+        if (pfd.revents & POLLIN){
+            #ifdef __USE_SOCAT__
+            return read(pfd.fd, buf, buflen);
+            #else
+            if (read(pfd.fd, &len, sizeof(int32_t)) > 0){
+                if (len <= buflen){
+                     readed = read(pfd.fd, buf, len);
+                     while(readed != len){
+                        readed += read(pfd.fd, buf+readed, len-readed);
+                     }
+                     return len;
+                }else{
+                    return 0;
+                }
             }else{
                 return 0;
             }
-        }else{
-            return 0;
+            #endif
         }
-        #endif
     }
 } 
 
