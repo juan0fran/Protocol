@@ -183,7 +183,7 @@ static void init_args(arguments_t *arguments)
     arguments->repetition = 1;
     arguments->fec = 0;
     arguments->whitening = 0;
-    arguments->preamble = PREAMBLE_4;
+    arguments->preamble = PREAMBLE_24;
     arguments->tnc_serial_window = 40000;
     arguments->tnc_radio_window = 0;
     arguments->tnc_keyup_delay = 4000;
