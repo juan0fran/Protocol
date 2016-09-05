@@ -146,6 +146,7 @@ void kiss_unpack(uint8_t *kiss_block, uint8_t *packed_block, size_t *size)
 uint8_t kiss_command(uint8_t *block)
 // ------------------------------------------------------------------------------------------------
 {
+    return 0;
     uint8_t command_code = block[1] & 0x0F;
     uint8_t kiss_port = (block[1] & 0xF0)>>4;
     uint8_t command_arg = block[2];
