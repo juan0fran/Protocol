@@ -99,6 +99,8 @@ typedef struct arguments_s {
     uint32_t     tnc_keydown_delay;    // TNC keydown delay in microseconds
     uint32_t     tnc_switchover_delay; // TNC Rx/Tx switchover delay in microseconds
     uint8_t      real_time;            // Engage so called "real time" scheduling
+    int          gdo0;
+    int          gdo2;
 } arguments_t;
 
 #endif

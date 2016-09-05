@@ -107,6 +107,8 @@ static struct argp_option options[] = {
     {"tnc-keyup-delay",  302, "KEYUP_DELAY_US", 0, "TNC keyup delay in microseconds (default: 10ms). In KISS mode it can be changed live via kissparms."},
     {"tnc-keydown-delay",  303, "KEYDOWN_DELAY_US", 0, "FUTUR USE: TNC keydown delay in microseconds (default: 0 inactive)"},
     {"tnc-switchover-delay",  304, "SWITCHOVER_DELAY_US", 0, "FUTUR USE: TNC switchover delay in microseconds (default: 0 inactive)"},
+    {"gdo0", 'g', "GDO0_PIN", 4, "GDO0 pin from Wiring Pi"},
+    {"gdo2", 'i', "GDO2_PIN", 5, "GDO2 pin from Wiring Pi"},
     {0}
 };
 
@@ -188,6 +190,8 @@ static void init_args(arguments_t *arguments)
     arguments->tnc_keydown_delay = 0;
     arguments->tnc_switchover_delay = 0;
     arguments->real_time = 0;
+    arguments->gdo0 = 4;
+    arguments->gdo2 = 5;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -477,6 +481,12 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
             if (*end)
                 argp_usage(state);
             break; 
+        case 'g':
+            arguments->gdo0 = strtol(arg, &end, 10);
+            break;
+        case 'i':
+            arguments->gdo2 = strtol(arg, &end, 10);
+            break;
         default:
             return ARGP_ERR_UNKNOWN;
     }

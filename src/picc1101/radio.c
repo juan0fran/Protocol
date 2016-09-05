@@ -494,6 +494,9 @@ void init_radio_parms(radio_parms_t *radio_parms, arguments_t *arguments)
     radio_parms->modulation    = (radio_modulation_t) arguments->modulation;
     radio_parms->fec           = arguments->fec;
     radio_int_data.packet_length = arguments->packet_length;
+    
+    WPI_GDO2 = arguments->gdo2; 
+    WPI_GDO0 = arguments->gdo0;
 
     if (arguments->variable_length)
     {
