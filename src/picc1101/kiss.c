@@ -214,18 +214,12 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     radio_turn_rx(spi_parms);            // Turn Rx on
 
     while(1)
-    {    
-        byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
+    {
+        byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
 
         if (byte_count > 0)
-        {
-            rx_count += byte_count;  // Accumulate Rx
-            
-            gettimeofday(&tp, NULL);
-            timestamp = tp.tv_sec * 1000000ULL + tp.tv_usec;
-            timeout_value = arguments->tnc_radio_window;
-            force_mode = (timeout_value == 0);
-
+        {            
+            rx_count = byte_count;
             if (rtx_toggle) // Tx to Rx transition
             {
                 tx_trigger = 1; // Push Tx
@@ -234,7 +228,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             {
                 tx_trigger = 0;
             }
-
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             rtx_toggle = 0;
         }
@@ -243,13 +236,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
         if (byte_count > 0)
         {
-            tx_count += byte_count;  // Accumulate Tx
-
-            gettimeofday(&tp, NULL);
-            timestamp = tp.tv_sec * 1000000ULL + tp.tv_usec;
-            timeout_value = arguments->tnc_serial_window;
-            force_mode = (timeout_value == 0);
-
+            tx_count = byte_count;  // Accumulate Tx
             if (!rtx_toggle) // Rx to Tx transition
             {
                 rx_trigger = 1;
@@ -262,7 +249,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rtx_toggle = 1;
         }
 
-        if ((rx_count > 0) && ((rx_trigger) || (force_mode))) // Send bytes received on air to serial
+        if ((rx_count > 0) && ((rx_trigger))) // Send bytes received on air to serial
         {
             radio_wait_free();            // Make sure no radio operation is in progress
             radio_turn_idle(spi_parms);   // Inhibit radio operations
@@ -275,41 +262,24 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rx_trigger = 0;
         }
 
-        if ((tx_count > 0) && ((tx_trigger) || (force_mode))) // Send bytes received on serial to air 
+        if ((tx_count > 0) && ((tx_trigger))) // Send bytes received on serial to air 
         {
-            if (!kiss_command(tx_buffer))
-            {
-                radio_wait_free();            // Make sure no radio operation is in progress
-                radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
-                radio_flush_fifos(spi_parms); // Flush result of any Rx activity
+            radio_wait_free();            // Make sure no radio operation is in progress
+            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
 
-                verbprintf(2, "%d bytes to send\n", tx_count);
+            verbprintf(2, "%d bytes to send\n", tx_count);
 
-                if (tnc_tx_keyup_delay)
-                {
-                    usleep(tnc_tx_keyup_delay);
-                }
+            /* I send the radio packet */
+            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
 
-                radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
-
-                radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
-                radio_turn_rx(spi_parms);            // put back into Rx
-            }
+            /* Then put the radio to RX again */
+            radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
+            radio_turn_rx(spi_parms);            // put back into Rx
 
             tx_count = 0;
             tx_trigger = 0;            
         }
-
-        if (!force_mode)
-        {
-            gettimeofday(&tp, NULL);
-
-            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
-            {
-                force_mode = 1;
-            }                        
-        }
-
         radio_wait_a_bit(4);
     }
 }
