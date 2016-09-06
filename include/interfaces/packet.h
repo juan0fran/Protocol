@@ -25,6 +25,7 @@ typedef enum MSFLAG{
 
 typedef struct Control{
 	int 					initialised;			/* 0 uninitialised, 1 initialised */
+	int 					packet_counter;
 	int 					piggy_time;
 	int 					ping_link_time;			/* in ms */
 	int 					death_link_time;		/* in ms */
@@ -41,6 +42,7 @@ typedef struct Status{
 	uint8_t 	type;		/* packet type */
 	uint8_t 	sn;			/* sequence number */
 	uint8_t 	rn;			/* request number */
+	int 		stored_count;
 	BYTE		stored_packet[MTU_SIZE + MTU_OVERHEAD]; /* stored packet to forward if requested */
 	int 		stored_len;	/* stored packet len to forward if requested */
 	uint8_t 	stored_type;

@@ -40,6 +40,7 @@ ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s) {
 			printf("Error writing\n");
 			return IO_ERROR;
 		}
+		s->stored_count = 0;
 		s->stored_type = s->type;
 		s->stored_len = len;
 		memcpy(s->stored_packet, buffer, len);
@@ -229,8 +230,16 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		/* Resend Frame */
 		if (c->waiting_ack == true){
 			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
+			if (++s->stored_count == c->packet_counter){
+				c->waiting_ack = false;
+				return NO_ERROR;
+			}
 			s->type = s->stored_type;
 			/* Care!, maybe is not type D */
+			if (++s->stored_count == c->packet_counter){
+				c->waiting_ack = false;
+				return NO_ERROR;
+			}
 			if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 				printf("Error writing\n");
 				return IO_ERROR;
@@ -258,6 +267,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					printf("Error writing\n");
 					return IO_ERROR;
 				}
+				s->stored_count = 0;
 				s->stored_type = s->type;
 				s->stored_len = len;
 				memcpy(s->stored_packet, buffer, len);
@@ -359,6 +369,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 						return NO_ERROR;
 					}
 				}else{
+					printf("Received sn == rn and waiting_ack == true\n");
 					if (rs.type == 'D' || rs.type == 'P'){
 						if (rs.type == 'D'){
 							printf("Sending packet towards the network while waiting for ACK\n");
@@ -390,6 +401,10 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					/* Resend Frame */
 					printf("Timeout waiting for ACK but something triggered us\n");	
 					s->stored_type = s->type;
+					if (++s->stored_count == c->packet_counter){
+						c->waiting_ack = false;
+						return NO_ERROR;
+					}
 					if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 						printf("Error writing\n");
 						return IO_ERROR;
