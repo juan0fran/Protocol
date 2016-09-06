@@ -61,8 +61,13 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we are reading IP packets, the Length is inside the IP header */
 			/* we will read 4 bytes, those will be version and flag bytes -> pass directly */
 			/* we will read the sie, is a uint16_t */
+			ret = 0;
+			while(1){
+				ret += read(fd, p+ret, 1);
+				printf("0x%02X ", p[ret-1]);
+			}
 			ret = read(fd, p, 4);
-			printf("0x%02X 0x%02X\n", p[0], p[1]);
+			printf("IP: 0x%02X\n", p[0]);
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
 			ip_len = ntohs(ip_len);
 			printf("IP frame read -> %d, ret: %d\n", ip_len, ret);
