@@ -24,6 +24,7 @@ int write_to_net(int fd, BYTE * p, int len){
 #ifdef __EXAMPLE_WITH_SOCAT__
 	write(fd, p, len);
 #else
+	/* At the end we are writing ip packets, so no need to send the Length since is in the IP packet */
 	//write(fd, &len, sizeof(int32_t));
 	write(fd, p, len);
 #endif
@@ -38,6 +39,7 @@ int check_headers_net(BYTE * p, int * len){
 int read_packet_from_net(int fd, BYTE * p, int timeout){
 	struct pollfd pfd;
 	int len;
+	uint16_t ip_len;
 	int rv;
 	int ret;
 	int timeout_count = 0;
@@ -56,13 +58,20 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* ret = read(fd, &len, sizeof(int32_t)); */
 			/* if (ret != sizeof(int32_t))
 				return -1; */
-			ret = read(fd, p, MTU_SIZE);
-			len = ret;
-			/*if (ret > 0){
-				while (ret != len){
-					ret += read(fd, p+ret, len);
+			/* we are reading IP packets, the Length is inside the IP header */
+			/* we will read 4 bytes, those will be version and flag bytes -> pass directly */
+			/* we will read the sie, is a uint16_t */
+			ret = read(fd, p, 4);
+			memcpy(ip_len, p+2, sizeof(uint16_t));
+			/* copy to IP len the length */
+			/* then read up to ip_len - 4 bytes */			
+			ret += read(fd, p+4, ip_len);
+			if (ret > 0){
+				while (ret != ip_len){
+					ret += read(fd, p+ret, ip_len - ret);
 				}
-			}*/
+			}
+			len = ip_len;
 		#else
 			ret = 0;
 			len = read(fd, p, 1);
