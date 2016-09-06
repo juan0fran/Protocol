@@ -66,10 +66,12 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			ip_len = ntohs(ip_len);
 			printf("IP frame read -> %d\n", ip_len);
 			/* copy to IP len the length */
-			/* then read up to ip_len - 4 bytes */			
-			ret += read(fd, p+ret, ip_len - 4);
+			/* then read up to ip_len - 4 bytes */		
+			ret += read(fd, p+ret, ip_len - ret);
+			printf("-->> Reading the rest of the frame\n");
 			if (ret > 0){
 				while (ret != ip_len){
+					printf("-->> The frame is not complete\n");
 					ret += read(fd, p+ret, ip_len - ret);
 				}
 			}
