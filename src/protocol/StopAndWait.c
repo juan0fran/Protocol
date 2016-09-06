@@ -304,7 +304,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 							printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
 						}
 						/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
-						rv = poll(&ufds[0], 1, 0);
+						rv = poll(&ufds[0], 1, c->piggy_time);
 						if (rv == -1){
 							perror("poll inside function: ");
 							return IO_ERROR;
@@ -337,7 +337,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 							printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
 						}
 						/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
-						rv = poll(&ufds[0], 1, 0);
+						rv = poll(&ufds[0], 1, c->piggy_time);
 						if (rv == -1){
 							perror("poll inside function: ");
 							return IO_ERROR;
