@@ -61,28 +61,10 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we are reading IP packets, the Length is inside the IP header */
 			/* we will read 4 bytes, those will be version and flag bytes -> pass directly */
 			/* we will read the sie, is a uint16_t */
-			ret = 0;
-			while(1){
-				ret += read(fd, p+ret, 1);
-				printf("0x%02X\n", p[ret-1]);
-			}
-			ret = read(fd, p, 4);
-			printf("IP: 0x%02X\n", p[0]);
+			ret = read(fd, p, MTU_SIZE);
+			printf("IP: 0x%02X -> ", p[0]);
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
-			ip_len = ntohs(ip_len);
-			printf("IP frame read -> %d, ret: %d\n", ip_len, ret);
-			/* copy to IP len the length */
-			/* then read up to ip_len - 4 bytes */
-			ret += read(fd, p+ret, ip_len - ret);
-			printf("-->> Reading the rest of the frame\n");
-			if (ret > 0){
-				printf("Ret is > 0: %d\n", ret);
-				while (ret != ip_len){
-					printf("-->> The frame is not complete\n");
-					ret += read(fd, p+ret, ip_len - ret);
-				}
-			}
-			len = ip_len;
+			(uint16_t) len = ntohs(ip_len);
 		#else
 			ret = 0;
 			len = read(fd, p, 1);
@@ -97,7 +79,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 				printf("%c", p[len-1]);
 			}
 		#endif
-			printf("Received packet from net-> ");
+			printf("Received packet from net -> ");
 			//printf_packet(p, len);
 			printf("Read %d bytes from device %s\n", len, "tun0");
 			return len;
