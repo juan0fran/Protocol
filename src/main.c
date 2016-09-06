@@ -94,8 +94,8 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 		}
 		control.initialised = 0;
 		control.ping_link_time = 5000;
-		control.piggy_time = 50;
-		control.packet_timeout_time = 150; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.piggy_time = 100;
+		control.packet_timeout_time = 500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.death_link_time = 10000; /* in ms */ /* after 10 seconds without handshake, test again */
 		printf("The two socket are initialised\n");
 		physical_layer_control();
