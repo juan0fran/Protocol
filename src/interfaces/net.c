@@ -62,7 +62,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we will read 4 bytes, those will be version and flag bytes -> pass directly */
 			/* we will read the sie, is a uint16_t */
 			ret = read(fd, p, 4);
-			memcpy(ip_len, p+2, sizeof(uint16_t));
+			memcpy(&ip_len, p+2, sizeof(uint16_t));
 			/* copy to IP len the length */
 			/* then read up to ip_len - 4 bytes */			
 			ret += read(fd, p+4, ip_len);
