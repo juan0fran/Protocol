@@ -64,7 +64,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			ret = read(fd, p, MTU_SIZE);
 			printf("IP: 0x%02X -> ", p[0]);
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
-			(uint16_t) len = ntohs(ip_len);
+			len = (int) ntohs(ip_len);
 		#else
 			ret = 0;
 			len = read(fd, p, 1);
