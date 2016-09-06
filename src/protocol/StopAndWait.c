@@ -214,10 +214,10 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	ufds[0].events = POLLIN; // check for normal data
 	ufds[1].fd = c->phy_fd;
 	ufds[1].events = POLLIN; // check for normal data
-	c->timeout = 0;
+
 	if (c->waiting_ack == true){
 		printf("Waiting for a packet from PHY -> do not accept from net\n");
-		rv = poll(&ufds[1], 1, c->packet_timeout_time);
+		rv = poll(&ufds[1], 1, c->round_trip_time);
 	}else{
 		printf("Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 2, c->ping_link_time);
@@ -228,10 +228,16 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		return IO_ERROR;
 	}else if(rv == 0){
 		/* Resend Frame */
+
+		/* TODO: MAKE A FUNCTION FOR THAT */
+
 		if (c->waiting_ack == true){
 			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
 			if (++s->stored_count == c->packet_counter){
 				printf("Timeout EXPIRED\n");
+				/* Last link updated, round trip time must be updated */
+				/* Every packet sent c->timeout is set */
+				c->round_trip_time = c->packet_timeout_time;
 				c->waiting_ack = false;
 				return NO_ERROR;
 			}
@@ -246,6 +252,9 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	}else{
 		/* Check the timeout */
 		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
+
+			/* TODO: MAKE A FUNCTION FOR THAT */
+
 			printf("Something at the NET that can be read\n");
 			/* Something in Network Layer -> this has priority when not waiting for ACK */
 			/* Do stop and wait SEND */
@@ -279,6 +288,9 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		}
 		/* Something arrived from the medium!! */
 		if (ufds[1].revents & POLLIN){
+
+			/* TODO: MAKE A FUNCTION FOR THAT */
+
 			printf("Something at the medium that can be read\n");
 			/* Something at the physical layer -> this is second priority */
 			/* Do stop and wait RECV */
@@ -294,11 +306,17 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				/* The packet is lost */
 				return NO_ERROR;
 			}
+			/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
 			if (rs.rn != s->sn && c->waiting_ack == true){
 				printf("Good packet while waiting for ACK. s->sn updated\n");
 				s->sn = rs.rn;
 				c->waiting_ack = false;
+				/* Last link updated, round trip time must be updated */
+				/* Every packet sent c->timeout is set */
+				c->round_trip_time = (millitime() - c->timeout) + 2 * piggy_time;
 				c->last_link = millitime();
+
+				/* A new packet (sent from other station) has been received while witing for ACK */
 				if (rs.sn == s->rn){
 					/* Data or Control */
 					if (rs.type == 'D' || rs.type == 'P'){
@@ -330,6 +348,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					return NO_ERROR;
 				}
 			}
+
+			/* A new packet (sent from other station) has been received, we were not waiting for ACK or nothing */
 			if (rs.sn == s->rn){
 				if (c->waiting_ack == false){
 					/* Aquí no entro nunca broh */
@@ -366,6 +386,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 						return NO_ERROR;
 					}
 				}else{
+					
+					/* A packet received not ACKing my last packet, but I was waiting a packet */
 					printf("Received sn == rn and waiting_ack == true\n");
 					if (rs.type == 'D' || rs.type == 'P'){
 						if (rs.type == 'D'){
@@ -383,23 +405,28 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					}
 				}
 			}else{
+				/* This packet has no sense with the flags */
+				printf("What is that?\n");
 				if (rs.type == 'D' || rs.type == 'P' || rs.type == 'C'){
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}
 			}
 			/* This cannot be a corrupted frame */
-		}else{
+		}
+		/* commenting this, i whink is not useful */
+		#if 0
+		else{
 			/* In case we are here --> I.E. No packet received from PHY but waiting for ACK */
 			if (c->waiting_ack == true){
 				/* update timeout variable */
-				c->timeout = millitime() - c->timeout;
-				if (c->timeout >= c->packet_timeout_time){
+				if ((millitime() - c->timeout) >= c->packet_timeout_time){
 					/* Resend Frame */
 					printf("Timeout waiting for ACK but something triggered us\n");	
 					s->stored_type = s->type;
 					if (++s->stored_count == c->packet_counter){
 						c->waiting_ack = false;
+						c->round_trip_time = c->packet_timeout_time;
 						printf("Timeout EXPIRED\n");
 						return NO_ERROR;
 					}
@@ -414,6 +441,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				}
 			}
 		}
+		#endif
 	}
 	return NO_ERROR;
 }

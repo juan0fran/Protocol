@@ -25,11 +25,12 @@ typedef enum MSFLAG{
 
 typedef struct Control{
 	int 					initialised;			/* 0 uninitialised, 1 initialised */
-	int 					packet_counter;
-	int 					piggy_time;
+	int 					round_trip_time;		/* in ms */
+	int 					packet_counter;			/* counter of retransmit counter */
+	int 					piggy_time;				/* this is the piggybacking waiting time */
 	int 					ping_link_time;			/* in ms */
-	int 					death_link_time;		/* in ms */
-	int 					packet_timeout_time; 	/* in ms */
+	int 					death_link_time;		/* death timeout in ms */
+	int 					packet_timeout_time; 	/* start packet timeout in ms */
 	MSFLAG 					master_slave_flag;		
 	int 					net_fd;
 	int 					phy_fd;
