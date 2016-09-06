@@ -231,15 +231,12 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		if (c->waiting_ack == true){
 			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
 			if (++s->stored_count == c->packet_counter){
+				printf("Timeout EXPIRED\n");
 				c->waiting_ack = false;
 				return NO_ERROR;
 			}
 			s->type = s->stored_type;
 			/* Care!, maybe is not type D */
-			if (++s->stored_count == c->packet_counter){
-				c->waiting_ack = false;
-				return NO_ERROR;
-			}
 			if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
 				printf("Error writing\n");
 				return IO_ERROR;
@@ -403,6 +400,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					s->stored_type = s->type;
 					if (++s->stored_count == c->packet_counter){
 						c->waiting_ack = false;
+						printf("Timeout EXPIRED\n");
 						return NO_ERROR;
 					}
 					if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
