@@ -405,14 +405,16 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 						return NO_ERROR;
 					}
 				}
-			}else{
-				/* This packet has no sense with the flags */
+			}
+			/* I think i will not use that anymore */
+			/* This packet has no sense with the flags */
+			/*else{
 				printf("What is that?\n");
 				if (rs.type == 'D' || rs.type == 'P' || rs.type == 'C'){
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}
-			}
+			}*/
 			/* This cannot be a corrupted frame */
 		}
 		/* commenting this, i whink is not useful */
