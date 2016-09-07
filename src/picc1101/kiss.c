@@ -215,9 +215,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
     while(1)
     {
-        verbprintf(3, "Going to Radio Receive a packet\n");
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
-        verbprintf(3, "Something read\n");
         if (byte_count > 0)
         {            
             rx_count = byte_count;
@@ -232,9 +230,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rtx_toggle = 0;*/
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive            
         }
-        verbprintf(3, "Going to Receive from IP\n");
         byte_count = read_serial(serial_parms, &tx_buffer[tx_count], bufsize - tx_count);
-        verbprintf(3, "Something read\n");
 
         if (byte_count > 0)
         {
