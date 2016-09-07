@@ -134,7 +134,7 @@ void int_packet(void)
             {
                 //p_radio_int_data->rx_count = radio_get_packet_length(p_radio_int_data->spi_parms);
                 //p_radio_int_data->rx_count += 2; // Add RSSI + LQI/CRC bytes
-                p_radio_int_data->rx_count = p_radio_int_data->packet_length + 2;
+                p_radio_int_data->rx_count = p_radio_int_data->packet_length;
                 p_radio_int_data->bytes_remaining = p_radio_int_data->rx_count;
 
                 verbprintf(3, "%d bytes to read (fixed)\n", p_radio_int_data->rx_count);
