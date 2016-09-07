@@ -313,7 +313,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				c->waiting_ack = false;
 				/* Last link updated, round trip time must be updated */
 				/* Every packet sent c->timeout is set */
-				c->round_trip_time = (millitime() - c->timeout) + 2 * piggy_time;
+				c->round_trip_time = (millitime() - c->timeout) + 2 * c->piggy_time;
 				c->last_link = millitime();
 
 				/* A new packet (sent from other station) has been received while witing for ACK */
