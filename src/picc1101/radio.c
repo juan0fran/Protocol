@@ -1198,7 +1198,7 @@ void radio_send_packet(spi_parms_t *spi_parms, arguments_t *arguments, uint8_t *
         radio_int_data.tx_count = block_length + 2;
     }
     memset((uint8_t *) radio_int_data.tx_buf, 0, arguments->packet_length);
-    memcpy((uint8_t *) &radio_int_data.tx_buf[0], block_start, block_length);
+    memcpy((uint8_t *) &radio_int_data.tx_buf[0], packet, block_length);
     
     /* put out the lengths and countdowns */
     /*radio_int_data.tx_buf[0] = block_length + 1; // size takes countdown counter into account
