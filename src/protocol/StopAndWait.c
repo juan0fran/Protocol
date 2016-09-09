@@ -312,7 +312,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				/* The packet is lost */
 				return NO_ERROR;
 			}
-			if (rs.sn == s->rn){
+			/*if (rs.sn == s->rn){*/
 				c->last_link = millitime();
 				/* Aquí no entro nunca broh */
 				if (rs.type == 'D' || rs.type == 'P'){
@@ -330,7 +330,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}
-			}
+			//}
 			#if 0
 			/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
 			if (rs.rn != s->sn && c->waiting_ack == true){
