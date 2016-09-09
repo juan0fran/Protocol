@@ -7,8 +7,11 @@
 #include <fcntl.h>  /* O_RDWR */
 
 #include <sys/ioctl.h> /* ioctl() */
+
+#ifndef __MAC_OS_X__
 #include <linux/if.h>
 #include <linux/if_tun.h>
+#endif
 
 int initialise_client_socket(char * socket_path){
 	int fd;
@@ -31,6 +34,7 @@ int initialise_client_socket(char * socket_path){
 	return fd;
 }
 
+#ifndef __MAC_OS_X__
 int tun_alloc(char *devname)
 {
     struct ifreq ifr;
@@ -51,12 +55,9 @@ int tun_alloc(char *devname)
         perror("ioctl TUNSETIFF");close(fd);exit(1);
     }
 
-    /* After the ioctl call the fd is "connected" to tun device
-    * specified
-    * by devname */
-
     return fd;
 }
+#endif
 
 int initialise_server_socket(char * socket_path){
 	int fd;

@@ -16,7 +16,6 @@ Control control;
 Status status;
 
 /* This is in charge of the physical -> data -> network link */
-
 void physical_layer_control(){
 	/* Physical layer will pass through a Unix Socket to the Data link layer */
 	/* Data link layer will pass through a Unix Socket to the Network layer */
@@ -53,16 +52,6 @@ void physical_layer_control(){
 				printf("Error at protocol control: %d\n", err);
 				return;
 			}
-			/* basically, we will try to send a control frame every 10 times we are here */
-			/*counter++;
-			if (counter == 10){
-				counter = 0;
-				err = protocol_control_routine(NULL, &control, &status);
-				if (err == IO_ERROR){
-					printf("Error at protocol control: %d\n", err);
-					return;
-				}
-			}*/
 		}
 	}
 }
@@ -71,11 +60,12 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 	char syscall[256];
 	while (1){
 		printf("Connect sockets\n");
-		control.phy_fd = initialise_client_socket(sock_data_phy);
+		control.phy_fd = initialise_server_socket(sock_data_phy);
 		if (control.phy_fd == -1){
 			perror("Openning phyfd: ");
 			exit(-1);
 		}
+	#ifndef __MAC_OS_X__
 		/* Before connecting the IFACE, set UP the IP */
 		sprintf(syscall, "ip tuntap del dev %s mode tun", sock_data_net);
 		system(syscall);
@@ -85,15 +75,16 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 		system(syscall);
 		sprintf(syscall, "ip link set dev %s up", sock_data_net);
 		system(syscall);
-
   		control.net_fd = tun_alloc(sock_data_net);  /* tun interface */
-		/*control.net_fd = initialise_server_socket(sock_data_net);*/
+  	#else
+		control.net_fd = initialise_server_socket(sock_data_net);
 		if (control.net_fd == -1){
 			perror("Opening netfd: ");
 			exit(-1);
 		}
+	#endif
 		control.initialised = 0;
-		control.packet_counter = 3;
+		control.packet_counter = 10;
 		control.ping_link_time = 5000;
 		control.piggy_time = 50;
 		control.packet_timeout_time = 500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */

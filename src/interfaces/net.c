@@ -25,7 +25,9 @@ int write_to_net(int fd, BYTE * p, int len){
 	write(fd, p, len);
 #else
 	/* At the end we are writing ip packets, so no need to send the Length since is in the IP packet */
-	//write(fd, &len, sizeof(int32_t));
+#ifdef __MAC_OS_X__
+	write(fd, &len, sizeof(int32_t));
+#endif
 	write(fd, p, len);
 #endif
 	return 0;
@@ -61,10 +63,17 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we are reading IP packets, the Length is inside the IP header */
 			/* we will read 4 bytes, those will be version and flag bytes -> pass directly */
 			/* we will read the sie, is a uint16_t */
+		#ifndef __MAC_OS_X__
 			ret = read(fd, p, MTU_SIZE);
 			printf("IP: 0x%02X -> ", p[0]);
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
 			len = (int) ntohs(ip_len);
+		#else
+			ret = read(fd, &len, sizeof(int32_t));
+			if (ret != sizeof(int32_t))
+				return -1;
+			ret = read(fd, p, len);
+		#endif
 		#else
 			ret = 0;
 			len = read(fd, p, 1);

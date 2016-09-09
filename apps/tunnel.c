@@ -75,7 +75,7 @@ int main(int argc, char ** argv){
 				while(len != plen){
 					len += read(ufds[1].fd, buffer, plen);
 				}
-				printf("Received from 1: %s\n", buffer+3);
+				printf("Received from 1: %s\n", buffer+2);
 				/* Sometimes i do not want to write */
 				if (HasToBeSent(p)){
 					write(ufds[0].fd, &plen, sizeof(int));
@@ -94,7 +94,7 @@ int main(int argc, char ** argv){
 				while(len != plen){
 					len += read(ufds[0].fd, buffer, plen);
 				}
-				printf("Received from 0: %s\n", buffer+3);
+				printf("Received from 0: %s\n", buffer+2);
 				/* Sometimes i do not want to write */
 				if (HasToBeSent(p)){
 					write(ufds[1].fd, &plen, sizeof(int));
@@ -103,7 +103,7 @@ int main(int argc, char ** argv){
 			}
 			/* We write the packet, but we simulate a delay */
 			/* Transmission time is aprox 250 ms */
-			usleep(5 * 1000);
+			usleep(1 * 1000);
 		}
 	}
 }
