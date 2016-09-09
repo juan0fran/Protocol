@@ -228,9 +228,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		return IO_ERROR;
 	}else if(rv == 0){
 		/* Resend Frame */
-
 		/* TODO: MAKE A FUNCTION FOR THAT */
-
+		#if 0
 		if (c->waiting_ack == true){
 			printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
 			if (++s->stored_count == c->packet_counter){
@@ -248,6 +247,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				return IO_ERROR;
 			}
 		}
+		#endif
 		return NO_ERROR;
 	}else{
 		/* Check the timeout */
@@ -273,6 +273,9 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					printf("Error writing\n");
 					return IO_ERROR;
 				}
+				s->sn = rs.rn;
+				/* no ack! */
+				#if 0
 				s->stored_count = 0;
 				s->stored_type = s->type;
 				s->stored_len = len;
@@ -280,6 +283,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				c->waiting_ack = true;
 				/* Start the timeout */
 				c->timeout = millitime();
+				#endif
 			}else{
 				printf("NET Socket has been closed: %d\n", ret);							
 				/* End of socket */
@@ -306,6 +310,26 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				/* The packet is lost */
 				return NO_ERROR;
 			}
+			if (rs.sn == s->rn){
+				c->last_link = millitime();
+				/* Aquí no entro nunca broh */
+				if (rs.type == 'D' || rs.type == 'P'){
+					if (rs.type == 'D'){
+						printf("Sending packet towards the network\n");
+						check_headers_net(buffer, &len);
+						write_to_net(c->net_fd, buffer, len);
+					}else if (rs.type == 'P'){
+						printf("Control Packet arrived-> ");
+						printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+					}
+				}
+				if (rs.type == 'C'){
+					c->last_link = millitime();
+					write_ack_to_phy(c->phy_fd, c, s);
+					return NO_ERROR;
+				}
+			}
+			#if 0
 			/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
 			if (rs.rn != s->sn && c->waiting_ack == true){
 				printf("Good packet while waiting for ACK. s->sn updated\n");
@@ -406,6 +430,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 					}
 				}
 			}
+			#endif
 			/* I think i will not use that anymore */
 			/* This packet has no sense with the flags */
 			/*else{
