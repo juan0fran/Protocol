@@ -54,7 +54,7 @@ int main(int argc, char ** argv){
 		if ((counter[0]) == 5000){
 			exit(0);
 		}
-		rv = poll(ufds, 2, 500);
+		rv = poll(ufds, 2, 2000);
 		if (rv == -1){
 			perror("poll");
 			/* just return ... */

@@ -9,8 +9,10 @@
 #include <sys/ioctl.h>
 
 #include <protocol/StopAndWait.h>
+#include <util/log.h>
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
+#include <interfaces/phy.h>
 
 Control control;
 Status status;
@@ -26,31 +28,33 @@ void physical_layer_control(){
 	while(1){
 		while (control.initialised == 0){
 			/* Until it is not initialised, try to initilise */
-			printf("Going to initialise the link\n");
+			log_message(LOG_INFO, "Going to initialise the link\n");
 			err = protocol_establishment_routine(initialise_link, &control, &status);
 			if (err == IO_ERROR){
-				printf("Error at protocol control: %d\n", err);
+				log_message(LOG_ERROR, "Error at protocol control: %d\n", err);
 				return;
 			}
-			printf("Control initialised: %d\n", control.initialised);
+			log_message(LOG_INFO, "Control initialised: %d\n", control.initialised);
 		}
 		/* The link is initialised now! We have connection ;) */
 		err = protocol_establishment_routine(check_link_availability, &control, &status);
 		if (err == IO_ERROR){
-			printf("Error at protocol control: %d\n", err);
+			log_message(LOG_ERROR, "Error at protocol control: %d\n", err);
 			return;
 		}
 		counter = 0;
 		while (control.initialised == 1){
 			err = StopAndWait(&control, &status);
 			if (err != NO_ERROR){
-				printf("Error at S&W protocol: %d\n", err);
+				log_message(LOG_ERROR, "Error at S&W protocol: %d\n", err);
 				return;
 			}
-			err = protocol_establishment_routine(check_link_availability, &control, &status);
-			if (err == IO_ERROR){
-				printf("Error at protocol control: %d\n", err);
-				return;
+			if (control.initialised == 1){
+				err = protocol_establishment_routine(check_link_availability, &control, &status);
+				if (err == IO_ERROR){
+					log_message(LOG_ERROR, "Error at protocol control: %d\n", err);
+					return;
+				}
 			}
 		}
 	}
@@ -58,8 +62,10 @@ void physical_layer_control(){
 
 int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 	char syscall[256];
+	init_radio(15);
+	log_init(LOG_WARN, NULL, 0);
 	while (1){
-		printf("Connect sockets\n");
+		log_message(LOG_DEBUG, "Connect sockets\n");
 		control.phy_fd = initialise_server_socket(sock_data_phy);
 		if (control.phy_fd == -1){
 			perror("Openning phyfd: ");
@@ -85,12 +91,13 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * ip){
 	#endif
 		control.initialised = 0;
 		control.packet_counter = 10;
-		control.ping_link_time = 5000;
-		control.piggy_time = 50;
-		control.packet_timeout_time = 500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.ping_link_time = 2000;
+		control.piggy_time = 20;
+		control.byte_round_trip_time = 20;
+		control.packet_timeout_time = 1500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.round_trip_time = control.packet_timeout_time;
 		control.death_link_time = 10000; /* in ms */ /* after 10 seconds without handshake, test again */
-		printf("The two socket are initialised\n");
+		log_message(LOG_INFO, "The two socket are initialised\n");
 		physical_layer_control();
 		close(control.phy_fd);
 		close(control.net_fd);

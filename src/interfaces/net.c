@@ -11,6 +11,8 @@
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
 
+#include <util/log.h>
+
 //#define
 #undef __EXAMPLE_WITH_SOCAT__
 
@@ -52,7 +54,7 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 		perror("poll");
 		return -1;
 	}else if (rv == 0){
-		printf("Timeout\n");
+		log_message(LOG_INFO, "Timeout reading from net");
 	}else{
 		if (pfd.revents & POLLIN){
 			/* In case of socat -> read until \n */
@@ -88,9 +90,9 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 				printf("%c", p[len-1]);
 			}
 		#endif
-			printf("Received packet from net -> ");
+			log_message(LOG_DEBUG, "Received packet from net -> ");
 			//printf_packet(p, len);
-			printf("Read %d bytes from device %s\n", len, "tun0");
+			log_message(LOG_INFO, "Read %d bytes from device %s\n", len, "tun0");
 			return len;
 		}	
 		/* packet read! */

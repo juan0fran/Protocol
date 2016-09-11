@@ -26,6 +26,7 @@ typedef enum MSFLAG{
 typedef struct Control{
 	int 					initialised;			/* 0 uninitialised, 1 initialised */
 	int 					round_trip_time;		/* in ms */
+	int 					byte_round_trip_time;	/* in ms */
 	int 					packet_counter;			/* counter of retransmit counter */
 	int 					piggy_time;				/* this is the piggybacking waiting time */
 	int 					ping_link_time;			/* in ms */

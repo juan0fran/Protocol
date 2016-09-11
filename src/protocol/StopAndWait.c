@@ -7,7 +7,10 @@
 #include <assert.h>
 #include <sys/time.h>
 
+#include <math.h>
+
 #include <protocol/StopAndWait.h>
+#include <util/log.h>
 #include <util/socket_utils.h>
 #include <interfaces/packet.h>
 #include <interfaces/phy.h>
@@ -37,7 +40,7 @@ ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s) {
 		buffer[1] = 'B';
 		len = 2;
 		if (write_packet_to_phy(c->phy_fd, buffer, len, c, s) != NO_ERROR){
-			printf("Error writing\n");
+			log_message(LOG_ERROR, "Error writing\n");
 			return IO_ERROR;
 		}
 		s->stored_count = 0;
@@ -94,13 +97,13 @@ ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control
 					/* Make a control frame send */
 					ret = protocol_control_routine(NULL, c, s);
 					if (ret == IO_ERROR){
-						printf("Error at protocol control: %d\n", ret);
+						log_message(LOG_ERROR, "Error at protocol control: %d\n", ret);
 						return ret;
 					}
 				}
 			}else if ( ((int) (millitime() - c->last_link )) >= c->death_link_time){
-				printf("Last link was: %llu. Now we are: %llu\n", c->last_link, millitime());
-				printf("link is dead -> set control.initialised to 0, return -1\n");
+				log_message(LOG_ERROR, "Last link was: %llu. Now we are: %llu\n", c->last_link, millitime());
+				log_message(LOG_ERROR, "link is dead -> set control.initialised to 0, return -1\n");
 				c->initialised = 0;
 			}else{
 				c->initialised = 1;
@@ -121,28 +124,41 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 	BYTE connect_packet[] = "Some Useless Information";
 	BYTE recv_buffer[MTU_SIZE + MTU_OVERHEAD];
 	Status rs;
+	struct pollfd pfd;
 	int connect_done = 0;
 	int ret;
 	int len;
 	int retry = 0;
 	int limit = (int)(c->death_link_time/c->packet_timeout_time);
 	limit += 1;
+	pfd.fd = c->phy_fd;
+	pfd.events = POLLIN;
 	while(!connect_done){
 		s->type = 'C';
 		s->sn = 0;
 		s->rn = 0;
+		log_message(LOG_DEBUG, "Trying to connect from master\n");
 		/* The master needs -> Send for a Connect packet, wait for a Connect packet, then send ACK */
 		if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
 			printf("Error writing\n");
 			return IO_ERROR;
 		}
-		if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len >= 0){
-			if (rs.type == 'C'){
-				s->sn = rs.rn;
-				s->rn = (s->rn + 1)%2;
-				c->last_link = millitime();
-				write_ack_to_phy(c->phy_fd, c, s);
-				connect_done = 1;
+		/* a read packet has to go with a poll or select */
+		if (poll(&pfd, 1, c->packet_timeout_time) > 0){
+			/* Try again xD */
+			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
+				if (rs.type == 'C'){
+					s->sn = rs.rn;
+					s->rn = (s->rn + 1)%2;
+					c->last_link = millitime();
+					write_ack_to_phy(c->phy_fd, c, s);
+					connect_done = 1;
+				}
+			}else{
+				retry++;
+				if (retry > limit){
+					return NO_LINK;
+				}
 			}
 		}else{
 			retry++;
@@ -160,12 +176,24 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 	int connect_done = 0;
 	int connect_established = 0;
 	int len;
+	struct pollfd pfd;
 	Status rs;
 	BYTE recv_buffer[MTU_SIZE + MTU_OVERHEAD];
 	BYTE connect_packet[] = "Some Useless Information";
+
+	pfd.fd = c->phy_fd;
+	pfd.events = POLLIN;
+
 	while (!connect_done){
 		/* The slave needs -> Wait for a Packet, then Send a Packet back (connect packet) */
-		if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->death_link_time, c, &rs), len >= 0){
+		log_message(LOG_DEBUG, "Trying to connect from slave\n");
+		/* a read packet has to go with a poll or select */
+		if (poll(&pfd, 1, c->death_link_time) <= 0){
+			/* Try again xD */
+			connect_established = 0;
+			return NO_LINK;
+		}
+		if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
 			if (rs.type == 'C'){
 				s->type = 'C';
 				s->sn = rs.sn;
@@ -173,7 +201,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 				s->rn = (s->rn + 1)%2;
 				c->last_link = millitime();
 				if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
-					printf("Error writing\n");
+					log_message(LOG_ERROR, "Error writing\n");
 					return IO_ERROR;
 				}
 				connect_established = 1;
@@ -182,7 +210,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 					s->sn = rs.rn;
 					connect_done = 1;
 					if (rs.type == 'D'){
-						printf("Connection from slave (ACK) has been done frome piggybacking packet\n");
+						log_message(LOG_INFO, "Connection from slave (ACK) has been done frome piggybacking packet\n");
 						write_to_net(c->net_fd, recv_buffer, len);
 						s->rn = (s->rn + 1)%2;
 						c->last_link = millitime();
@@ -192,7 +220,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 			}
 		}else if (connect_established == 1){
 			if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
-				printf("Error writing\n");
+				log_message(LOG_ERROR, "Error writing\n");
 				return IO_ERROR;
 			}	
 		}else{
@@ -203,21 +231,22 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 }
 
 ErrorHandler ResendFrame(Control * c, Status * s){
-	if (c->waiting_ack == true){
-		if (++s->stored_count == c->packet_counter){
-			printf("Timeout EXPIRED\n");
-			/* Last link updated, round trip time must be updated */
-			/* Every packet sent c->timeout is set */
-			c->round_trip_time = c->packet_timeout_time;
-			c->waiting_ack = false;
-			return NO_ERROR;
-		}
-		s->type = s->stored_type;
-		/* Care!, maybe is not type D */
-		if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
-			printf("Error writing\n");
-			return IO_ERROR;
-		}
+	if (++s->stored_count == c->packet_counter){
+		log_message(LOG_WARN, "Timeout EXPIRED for packet: SEQ -> %d\n", atoi((char *) s->stored_packet));
+		/* Last link updated, round trip time must be updated */
+		/* Every packet sent c->timeout is set */
+		//c->initialised = 0;
+		c->byte_round_trip_time = 20;
+		c->round_trip_time = c->packet_timeout_time;
+		c->waiting_ack = false;
+		flush_phy(c->phy_fd);
+		return NO_ERROR;
+	}
+	s->type = s->stored_type;
+	/* Care!, maybe is not type D */
+	if (write_packet_to_phy(c->phy_fd, s->stored_packet, s->stored_len, c, s) != 0){
+		log_message(LOG_ERROR, "Error writing\n");
+		return IO_ERROR;
 	}
 	return NO_ERROR;
 }
@@ -228,18 +257,18 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 	/* Something in Network Layer -> this has priority when not waiting for ACK */
 	/* Do stop and wait SEND */
 	if (len = read_packet_from_net(c->net_fd, buffer, 0), len < 0){
-		printf("Error reading\n");
+		log_message(LOG_ERROR, "Error reading\n");
 		return IO_ERROR;
 	}
 	if (len > 0){
 		if (len > MTU_SIZE){
-			printf("Maximum MTU reached\n");
+			log_message(LOG_ERROR, "Maximum MTU reached\n");
 			return IO_ERROR;
 		}
 		/* in ms */
 		s->type = 'D';
 		if (write_packet_to_phy(c->phy_fd, buffer, len, c, s) != 0){
-			printf("Error writing\n");
+			log_message(LOG_ERROR, "Error writing\n");
 			return IO_ERROR;
 		}
 		s->stored_count = 0;
@@ -248,16 +277,21 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		memcpy(s->stored_packet, buffer, len);
 		c->waiting_ack = true;
 		/* Start the timeout */
+		/* This update MUST be done to adapt from the current configuration */
+		/* byte rount trip time is not an exact measurement... */
+		/* But is a nice approximation including the piggy time */
+		c->round_trip_time = c->byte_round_trip_time /* * len */ + c->piggy_time;
+		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
 	}else{
-		printf("NET Socket has been closed\n");							
+		log_message(LOG_ERROR, "NET Socket has been closed\n");							
 		/* End of socket */
 		return IO_ERROR;
 	}
 	return NO_ERROR;
 }
 
-ErrorHandler RecvPhyFrame(Control * c, Status * s){
+ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	Status rs;
 	int rv;
 	int len;
@@ -267,45 +301,61 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s){
 	netfd.fd = c->net_fd;
 	netfd.fd = POLLIN;
 
-	if (len = read_packet_from_phy(c->phy_fd, buffer, 0, c, &rs), len < 0){
-		printf("Error reading\n");
+	/* This is the most important, read packet from phy */
+	/* This means, try to receive from the medium during c->round_trip_time time */
+	/* read_packet_from_phy will call a method to extract the packets... */
+	if (len = read_packet_from_phy(c->phy_fd, buffer, c->round_trip_time, c, &rs), len < 0){
+		log_message(LOG_ERROR, "Error reading\n");
 		return IO_ERROR;
 	}
+	if (len == 0){
+		/* Timeout */
+		return NO_ERROR;
+	}
 	/* Now is time to check wheter is that */
-	if (rs.type == 'C' && c->master_slave_flag == SLAVE){
-		printf("We are in troubles, master asks for reconnect\n");
-		printf("Waiting flag was: %d\n", c->waiting_ack);
+	if (rs.type == 'C'){
+		log_message(LOG_WARN, "We are in troubles, master asks for reconnect\n");
+		log_message(LOG_WARN, "Waiting flag was: %d\n", c->waiting_ack);
 		c->last_link = 0;
 		/* The packet is lost */
 		return NO_ERROR;
 	}
+	if (rs.rn == s->sn && c->waiting_ack == true){
+		/* The packet that is being received is a new one, but I want to send a previous one!! */
+		/* Resend the packet and forget about the received here */
+		ResendFrame(c, s);
+	}
 	/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
 	if (rs.rn != s->sn && c->waiting_ack == true){
-		printf("Good packet while waiting for ACK. s->sn updated\n");
+		log_message(LOG_INFO, "Good packet while waiting for ACK. s->sn updated\n");
 		s->sn = rs.rn;
 		c->waiting_ack = false;
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
-		c->round_trip_time = (millitime() - c->timeout) + 2 * c->piggy_time;
-		printf("Rount trip time updated to: %d\n", c->round_trip_time);
+		/* Filtering the round trip time */
+		/* Round trip time will be different if is an ACK or a piggybacking frame */
+		/* pending to fix round trip time */
+		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
+		//c->byte_round_trip_time = (int) ( lround( ceil ((double) (c->byte_round_trip_time * 0.2 + 0.8 * ((double) (millitime() - c->timeout) / (double)s->stored_len)) ) ));
+		c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
+		log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);
 		c->last_link = millitime();
-
 		/* A new packet (sent from other station) has been received while witing for ACK */
 		if (rs.sn == s->rn){
 			/* Data or Control */
 			if (rs.type == 'D' || rs.type == 'P'){
 				if (rs.type == 'D'){
-					printf("Sending packet towards the network. Received a piggybacking ACK\n");
+					log_message(LOG_INFO, "Sending packet towards the network. Received a piggybacking ACK\n");
 					check_headers_net(buffer, &len);
 					write_to_net(c->net_fd, buffer, len);
 				}else if (rs.type == 'P'){
-					printf("Control Packet arrived-> ");
-					printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+					log_message(LOG_DEBUG, "Control Packet arrived-> ");
+					log_message(LOG_DEBUG, "0x%02X 0x%02X\n", buffer[0], buffer[1]);
 				}
 				/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
 				rv = poll(&netfd, 1, c->piggy_time);
 				if (rv == -1){
-					perror("poll inside function: ");
+					log_message(LOG_ERROR, "poll inside function: ");
 					return IO_ERROR;
 				}else if (rv == 0){
 					s->rn = (s->rn + 1)%2;
@@ -320,26 +370,26 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s){
 			}
 			return NO_ERROR;
 		}
+		return NO_ERROR;
 	}
-
 	/* A new packet (sent from other station) has been received, we were not waiting for ACK or nothing */
 	if (rs.sn == s->rn){
 		if (c->waiting_ack == false){
 			/* Aquí no entro nunca broh */
-			printf("Received sn == rn and waiting_ack == false\n");
+			log_message(LOG_INFO, "Received sn == rn and waiting_ack == false\n");
 			if (rs.type == 'D' || rs.type == 'P'){
 				if (rs.type == 'D'){
-					printf("Sending packet towards the network\n");
+					log_message(LOG_INFO, "Sending packet towards the network\n");
 					check_headers_net(buffer, &len);
 					write_to_net(c->net_fd, buffer, len);
 				}else if (rs.type == 'P'){
-					printf("Control Packet arrived-> ");
-					printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+					log_message(LOG_DEBUG, "Control Packet arrived-> ");
+					log_message(LOG_DEBUG, "0x%02X 0x%02X\n", buffer[0], buffer[1]);
 				}
 				/* If we are waiting a packet from network, update s->rn and do not send ACK, send a new packet directly */
 				rv = poll(&netfd, 1, c->piggy_time);
 				if (rv == -1){
-					perror("poll inside function: ");
+					log_message(LOG_ERROR, "poll inside function: ");
 					return IO_ERROR;
 				}else if (rv == 0){
 					s->rn = (s->rn + 1)%2;
@@ -359,17 +409,16 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s){
 				return NO_ERROR;
 			}
 		}else{
-			
 			/* A packet received not ACKing my last packet, but I was waiting a packet */
-			printf("Received sn == rn and waiting_ack == true\n");
+			log_message(LOG_INFO, "Received sn == rn and waiting_ack == true\n");
 			if (rs.type == 'D' || rs.type == 'P'){
 				if (rs.type == 'D'){
-					printf("Sending packet towards the network while waiting for ACK\n");
+					log_message(LOG_INFO, "Sending packet towards the network while waiting for ACK\n");
 					check_headers_net(buffer, &len);
 					write_to_net(c->net_fd, buffer, len);
 				}else if (rs.type == 'P'){
-					printf("Control Packet arrived-> ");
-					printf("0x%02X 0x%02X\n", buffer[0], buffer[1]);
+					log_message(LOG_DEBUG, "Control Packet arrived-> ");
+					log_message(LOG_DEBUG, "0x%02X 0x%02X\n", buffer[0], buffer[1]);
 				}
 				s->rn = (s->rn + 1)%2;
 				c->last_link = millitime();	
@@ -377,6 +426,13 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s){
 				return NO_ERROR;
 			}
 		}
+	}else{
+		/* In case of received packet that amis to get an ACK */
+		if (rs.type != 'A'){
+			log_message(LOG_DEBUG, "ACKing old packet\n");
+			write_ack_to_phy(c->phy_fd, c, s);
+		}
+		return NO_ERROR;
 	}
 	return NO_ERROR;
 }
@@ -385,8 +441,9 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	int rv;
 	ErrorHandler err;
 	struct pollfd ufds[2];
+	unsigned long long timeout;
 
-	printf("Print the states: SN: %d RN: %d\n", s->sn, s->rn);
+	log_message(LOG_DEBUG, "Print the states: SN: %d RN: %d\n", s->sn, s->rn);
 
 	ufds[0].fd = c->net_fd;
 	ufds[0].events = POLLIN; // check for normal data
@@ -394,23 +451,27 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	ufds[1].events = POLLIN; // check for normal data
 
 	if (c->waiting_ack == true){
-		printf("Waiting for a packet from PHY -> do not accept from net\n");
+		log_message(LOG_INFO, "Waiting for a packet from PHY -> do not accept from net\n");
+		timeout = millitime();
 		rv = poll(&ufds[1], 1, c->round_trip_time);
+		timeout = millitime() - timeout;
 	}else{
-		printf("Waiting for some packet from NET or PHY\n");
+		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 2, c->ping_link_time);
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
-		perror("Error waiting for event: ");
+		log_message(LOG_ERROR, "Error waiting for event: ");
 		return IO_ERROR;
 	}else if(rv == 0){
-		printf("Timeout waiting for ACK, resending a frame if waiting for ack\n");
-		return (ResendFrame(c, s));
+		if (c->waiting_ack == true){
+			log_message(LOG_INFO, "Timeout waiting for ACK, resending a frame\n");
+			return (ResendFrame(c, s));
+		}
 	}else{
 		/* Check the timeout */
 		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
-			printf("Something at the NET that can be read\n");
+			log_message(LOG_DEBUG, "Something at the NETWORK layer\n");
 			err = SendNetFrame(c, s);
 			if (err != NO_ERROR){
 				return err;
@@ -419,8 +480,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		/* Something arrived from the medium!! */
 		if (ufds[1].revents & POLLIN){
 			/* TODO: MAKE A FUNCTION FOR THAT */
-			printf("Something at the medium that can be read\n");
-			return (RecvPhyFrame(c, s));
+			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
+			return (RecvPhyFrame(c, s, (int) timeout));
 		}
 	}
 	return NO_ERROR;
