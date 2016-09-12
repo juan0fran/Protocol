@@ -20,6 +20,21 @@ static void printf_packet (BYTE * buff, int len){
 	printf("Length: %d\n", len);
 }
 
+static int input_timeout (int filedes, unsigned int milliseconds){
+	fd_set set;
+	struct timeval timeout;
+	/* Initialize the file descriptor set. */
+	FD_ZERO (&set);
+	FD_SET (filedes, &set);
+
+	/* Initialize the timeout data structure. */
+	timeout.tv_sec = 0;
+	timeout.tv_usec = milliseconds * 1000; /* microsec*1000
+
+	/* select returns 0 if timeout, 1 if input available, -1 if error. */
+	return (select (FD_SETSIZE, &set, NULL, NULL, &timeout));
+}
+
 int write_to_net(int fd, BYTE * p, int len){
 	/* Here we can just forward the packet */
 	/* Example using socat -> simply write */
@@ -38,6 +53,13 @@ int write_to_net(int fd, BYTE * p, int len){
 int check_headers_net(BYTE * p, int * len){
 	/* now this does nothing */
 	return 0;
+}
+
+void flush_net(int fd){
+	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
+	while(input_timeout(fd, 0) > 0){
+		ret = read(fd, buffer, MTU_SIZE + MTU_OVERHEAD);
+	}
 }
 
 int read_packet_from_net(int fd, BYTE * p, int timeout){
@@ -67,7 +89,6 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we will read the sie, is a uint16_t */
 		#ifndef __MAC_OS_X__
 			ret = read(fd, p, MTU_SIZE);
-			printf("IP: 0x%02X -> ", p[0]);
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
 			len = (int) ntohs(ip_len);
 		#else
