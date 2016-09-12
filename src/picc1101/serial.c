@@ -208,6 +208,7 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
                 if (len <= buflen){
                      readed = read(pfd.fd, buf, len);
                      while(readed != len){
+                        printf("Not readed all: %d", readed);
                         readed += read(pfd.fd, buf+readed, len-readed);
                      }
                      return len;
@@ -220,6 +221,7 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
             #endif
         }
     }
+    return 0;
 } 
 
 #if 0
