@@ -58,7 +58,7 @@ int check_headers_net(BYTE * p, int * len){
 void flush_net(int fd){
 	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
 	while(input_timeout(fd, 0) > 0){
-		ret = read(fd, buffer, MTU_SIZE + MTU_OVERHEAD);
+		read(fd, buffer, MTU_SIZE + MTU_OVERHEAD);
 	}
 }
 
