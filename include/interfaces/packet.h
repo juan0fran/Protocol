@@ -12,12 +12,6 @@
 
 typedef unsigned char BYTE;
 
-typedef enum ProtocolControlEvent{
-	initialise_link,
-	check_link_availability,
-	desconnect_link,
-}ProtocolControlEvent;
-
 typedef enum MSFLAG{
 	MASTER,
 	SLAVE,
@@ -35,6 +29,7 @@ typedef struct Control{
 	MSFLAG 					master_slave_flag;		
 	int 					net_fd;
 	int 					phy_fd;
+	int 					beacon_fd;
 	bool 					waiting_ack;			/* true or false */
 	unsigned long long 		timeout; 				/* in ms */
 	unsigned long long 		last_link;				/* last connection timestamp (epoch in milliseconds) */

@@ -26,36 +26,97 @@ static unsigned long long millitime() {
 static ErrorHandler Connect_Master(Control * c, Status * s);
 static ErrorHandler Connect_Slave(Control * c, Status * s);
 
-ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s) {
-	ErrorHandler ret;
-	/* Routine to send control frames to the other peer */
-	/* We shall not be waiting an ACK before sending a control frame */
-	if (c->waiting_ack == false){
-		/* We can send the control frame */
-		s->type = 'P'; /* i.e. P will be a control frame */
-		BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
-		int len;
-		/* put the control information inside */
-		buffer[0] = 'A';
-		buffer[1] = 'B';
-		len = 2;
-		if (write_packet_to_phy(c->phy_fd, buffer, len, c, s) != NO_ERROR){
-			log_message(LOG_ERROR, "Error writing\n");
-			return IO_ERROR;
-		}
-		s->stored_count = 0;
-		s->stored_type = s->type;
-		s->stored_len = len;
-		memcpy(s->stored_packet, buffer, len);
-		c->waiting_ack = true;
-		/* We are waiting an ACK now!! */
-		/* Start the timeout */
-		c->timeout = millitime();
+static ErrorHandler protocol_send_beacon_routine (BYTE * p, int len, Control * c, Status * s){
+	s->type = 'B';
+	if (write_packet_to_phy(c->phy_fd, p, len, c, s) != NO_ERROR){
+		log_message(LOG_ERROR, "Error writing\n");
+		return IO_ERROR;
 	}
 	return NO_ERROR;
 }
 
-ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control * c, Status * s){
+static int protocol_recv_beacon_routine (BYTE * p, Control * c, Status * s){
+	struct pollfd pfd;
+	int len;	
+	int rv;
+	Status rs;
+	if (len = read_packet_from_phy(c->phy_fd, p, 0, c, &rs), len > 0){
+		if (rs.type == 'B'){
+			printf("Beacon message Received\n");
+			return len;
+		}else{
+			return 0;
+		}
+	}
+	return -1;
+}
+
+ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, Status * s) {
+	ErrorHandler ret;
+	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
+	int len;
+	int i; 
+	switch (event){
+	/* Routine to send control frames to the other peer */
+	/* We shall not be waiting an ACK before sending a control frame */
+		case control_packet:
+			if (c->waiting_ack == false){
+				/* We can send the control frame */
+				s->type = 'P'; /* i.e. P will be a control frame */
+				/* put the control information inside */
+				buffer[0] = 'A';
+				buffer[1] = 'B';
+				len = 2;
+				if (write_packet_to_phy(c->phy_fd, buffer, len, c, s) != NO_ERROR){
+					log_message(LOG_ERROR, "Error writing\n");
+					return IO_ERROR;
+				}
+				s->stored_count = 0;
+				s->stored_type = s->type;
+				s->stored_len = len;
+				memcpy(s->stored_packet, buffer, len);
+				c->waiting_ack = true;
+				/* We are waiting an ACK now!! */
+				/* Start the timeout */
+				c->timeout = millitime();
+			}
+			return NO_ERROR;
+			break;
+		case beacon_send:
+			/* log_message(LOG_DEBUG, "Trying to get a beacon from up\n"); */
+			if (input_timeout(c->beacon_fd, 0) > 0){
+				log_message(LOG_DEBUG, "Something to read!!\n");
+				len = read(c->beacon_fd, buffer, MTU_SIZE);
+				/* First of all, receive a beacon packet from SOCKET FD */
+				return (protocol_send_beacon_routine(buffer, len, c, s));
+			}
+			return NO_ERROR;
+			break;
+
+		case beacon_recv:
+			/* log_message(LOG_DEBUG, "Trying to receive a beacon from down\n"); */
+			if (input_timeout(c->phy_fd, 0) > 0){
+				if (len = protocol_recv_beacon_routine(buffer, c , s), len > 0){
+					/* just write as socat */
+					write(c->beacon_fd, buffer, len);
+					/* Send the BEACON packet to FD */
+					return HAVE_BEACON;
+				}else if (len == 0){
+					return NO_ERROR;
+				}else{
+					return NO_LINK;
+				}
+			}else{
+				return NO_LINK;
+			}
+			break;
+		default:
+		break;
+	}
+	return NO_ERROR;
+}
+
+ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, Control * c, Status * s){
 	ErrorHandler ret;
 	switch (event){
 		case initialise_link:
@@ -95,7 +156,7 @@ ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control
 				if (((int) (millitime() - c->last_link )) >= c->ping_link_time){
 					/* Still not death but in ping time */
 					/* Make a control frame send */
-					ret = protocol_control_routine(NULL, c, s);
+					ret = protocol_control_routine(control_packet, c, s);
 					if (ret == IO_ERROR){
 						log_message(LOG_ERROR, "Error at protocol control: %d\n", ret);
 						return ret;
@@ -129,15 +190,14 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 	int ret;
 	int len;
 	int retry = 0;
-	int limit = (int)(c->death_link_time/c->packet_timeout_time);
-	limit += 1;
+	int limit = 1 + (int)(c->death_link_time/c->packet_timeout_time);
 	pfd.fd = c->phy_fd;
 	pfd.events = POLLIN;
+	log_message(LOG_DEBUG, "Trying to connect as master\n");
 	while(!connect_done){
 		s->type = 'C';
 		s->sn = 0;
 		s->rn = 0;
-		log_message(LOG_DEBUG, "Trying to connect from master\n");
 		/* The master needs -> Send for a Connect packet, wait for a Connect packet, then send ACK */
 		if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
 			printf("Error writing\n");
@@ -147,9 +207,20 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 		if (poll(&pfd, 1, c->packet_timeout_time) > 0){
 			/* Try again xD */
 			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
-				if (rs.type == 'C'){
+				/* The slave answers S */
+				if (rs.type == 'S'){
 					s->sn = rs.rn;
 					s->rn = (s->rn + 1)%2;
+					c->last_link = millitime();
+					write_ack_to_phy(c->phy_fd, c, s);
+					connect_done = 1;
+				}
+				if (rs.type == 'C'){
+					/* Both are trying to connect as MASTER */
+					/* He is trying to connect us as master, equal as us -> send an ACK and end */
+					log_message(LOG_WARN, "Both are trying to connect as MASTER. Copy the SN and RN\n");
+					s->sn = rs.sn;
+					s->rn = rs.rn;
 					c->last_link = millitime();
 					write_ack_to_phy(c->phy_fd, c, s);
 					connect_done = 1;
@@ -176,55 +247,80 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 	int connect_done = 0;
 	int connect_established = 0;
 	int len;
-	struct pollfd pfd;
+	struct pollfd pfds[2];
 	Status rs;
 	BYTE recv_buffer[MTU_SIZE + MTU_OVERHEAD];
 	BYTE connect_packet[] = "Some Useless Information";
+	ErrorHandler ret;
 
-	pfd.fd = c->phy_fd;
-	pfd.events = POLLIN;
+	pfds[0].fd = c->phy_fd;
+	pfds[0].events = POLLIN;
 
+	pfds[1].fd = c->beacon_fd;
+	pfds[1].events = POLLIN;
+
+	log_message(LOG_DEBUG, "Trying to connect as slave\n");
 	while (!connect_done){
 		/* The slave needs -> Wait for a Packet, then Send a Packet back (connect packet) */
-		log_message(LOG_DEBUG, "Trying to connect from slave\n");
 		/* a read packet has to go with a poll or select */
-		if (poll(&pfd, 1, c->death_link_time) <= 0){
+		if (poll(pfds, 2, c->ping_link_time) <= 0){
 			/* Try again xD */
-			connect_established = 0;
 			return NO_LINK;
 		}
-		if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
-			if (rs.type == 'C'){
-				s->type = 'C';
-				s->sn = rs.sn;
-				s->rn = rs.rn;
-				s->rn = (s->rn + 1)%2;
-				c->last_link = millitime();
+		if (pfds[1].revents & POLLIN){
+			protocol_control_routine(beacon_send, c, s);
+		}
+		if (pfds[0].revents & POLLIN){
+			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
+				if (rs.type == 'B'){
+					write(c->beacon_fd, recv_buffer, len);
+					/* In case a beacon packet has been received -> Send the beacon up */
+					/* And try to connect them */
+					ret = Connect_Master(c, s);
+					if (ret == NO_ERROR){
+						c->initialised = 1;
+						c->waiting_ack = false;
+						c->last_link = millitime();
+					}else if (ret == IO_ERROR){
+						return IO_ERROR;
+					}else{
+						c->initialised = 0;
+					}				
+					return NO_ERROR;
+				}
+				if (rs.type == 'C'){
+					/* meaning im the slave answering */
+					s->type = 'S';
+					s->sn = rs.sn;
+					s->rn = rs.rn;
+					s->rn = (s->rn + 1)%2;
+					c->last_link = millitime();
+					if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
+						log_message(LOG_ERROR, "Error writing\n");
+						return IO_ERROR;
+					}
+					connect_established = 1;
+				}else{
+					if (rs.rn != s->sn){
+						s->sn = rs.rn;
+						connect_done = 1;
+						if (rs.type == 'D'){
+							log_message(LOG_INFO, "Connection from slave (ACK) has been done frome piggybacking packet\n");
+							write_to_net(c->net_fd, recv_buffer, len);
+							s->rn = (s->rn + 1)%2;
+							c->last_link = millitime();
+							write_ack_to_phy(c->phy_fd, c, s);
+						}
+					}
+				}
+			}else if (connect_established == 1){
 				if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
 					log_message(LOG_ERROR, "Error writing\n");
 					return IO_ERROR;
-				}
-				connect_established = 1;
+				}	
 			}else{
-				if (rs.rn != s->sn){
-					s->sn = rs.rn;
-					connect_done = 1;
-					if (rs.type == 'D'){
-						log_message(LOG_INFO, "Connection from slave (ACK) has been done frome piggybacking packet\n");
-						write_to_net(c->net_fd, recv_buffer, len);
-						s->rn = (s->rn + 1)%2;
-						c->last_link = millitime();
-						write_ack_to_phy(c->phy_fd, c, s);
-					}
-				}
+				return NO_LINK;
 			}
-		}else if (connect_established == 1){
-			if (write_packet_to_phy(c->phy_fd, connect_packet, sizeof(connect_packet), c, s) != 0){
-				log_message(LOG_ERROR, "Error writing\n");
-				return IO_ERROR;
-			}	
-		}else{
-			return NO_LINK;
 		}
 	}
 	return NO_ERROR;
@@ -320,6 +416,13 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		/* The packet is lost */
 		return NO_ERROR;
 	}
+
+	if (rs.type == 'B'){
+		log_message(LOG_INFO, "Beacon received!");
+		write(c->beacon_fd, buffer, len);
+		return NO_ERROR;
+	}
+
 	if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
@@ -451,7 +554,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	ufds[1].events = POLLIN; // check for normal data
 
 	if (c->waiting_ack == true){
-		log_message(LOG_INFO, "Waiting for a packet from PHY -> do not accept from net\n");
+		log_message(LOG_DEBUG, "Waiting for a packet from PHY -> do not accept from net\n");
 		timeout = millitime();
 		rv = poll(&ufds[1], 1, c->round_trip_time);
 		timeout = millitime() - timeout;
@@ -461,7 +564,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
-		log_message(LOG_ERROR, "Error waiting for event: ");
+		log_message(LOG_ERROR, "Error waiting for event");
 		return IO_ERROR;
 	}else if(rv == 0){
 		if (c->waiting_ack == true){
@@ -470,18 +573,18 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		}
 	}else{
 		/* Check the timeout */
+		/* Something arrived from the medium!! */
+		if (ufds[1].revents & POLLIN){
+			/* TODO: MAKE A FUNCTION FOR THAT */
+			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
+			return (RecvPhyFrame(c, s, (int) timeout));
+		}
 		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
 			log_message(LOG_DEBUG, "Something at the NETWORK layer\n");
 			err = SendNetFrame(c, s);
 			if (err != NO_ERROR){
 				return err;
 			}
-		}
-		/* Something arrived from the medium!! */
-		if (ufds[1].revents & POLLIN){
-			/* TODO: MAKE A FUNCTION FOR THAT */
-			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
-			return (RecvPhyFrame(c, s, (int) timeout));
 		}
 	}
 	return NO_ERROR;

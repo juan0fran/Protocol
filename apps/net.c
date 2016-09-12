@@ -51,6 +51,9 @@ int main(int argc, char ** argv){
 	ufds[1].fd = net2;
 	ufds[1].events = POLLIN; // check for normal data
 	while(1){
+		sleep(1);
+	}
+	while(1){
 		if ((counter[0]) == 5000){
 			exit(0);
 		}

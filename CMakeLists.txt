@@ -29,8 +29,12 @@ add_definitions(-D__MAC_OS_X__)
 endif()
 
 add_executable (Layer2 src/main.c ${UTIL_SOURCES} ${INTERFACE_SOURCES} ${PROTCOL_SOURCES})
+TARGET_LINK_LIBRARIES(Layer2 m)
+
 add_executable (Tunnel apps/tunnel.c ${UTIL_SOURCES})
-add_executable (PacketFormer apps/MultipleSend.c ${UTIL_SOURCES})
+
 add_executable (Net apps/net.c ${UTIL_SOURCES})
+
 add_executable (Tun_Ctrl apps/tun_ctrl.c ${UTIL_SOURCES})
+
 add_executable (RS_Test apps/example.c ${RSCODE_SOURCES})

@@ -27,7 +27,7 @@ void init_radio(int _physical_size){
 	phy_size = _physical_size;
 }
 
-static int input_timeout (int filedes, unsigned int milliseconds){
+int input_timeout (int filedes, unsigned int milliseconds){
 	fd_set set;
 	struct timeval timeout;
 	/* Initialize the file descriptor set. */
@@ -36,7 +36,7 @@ static int input_timeout (int filedes, unsigned int milliseconds){
 
 	/* Initialize the timeout data structure. */
 	timeout.tv_sec = 0;
-	timeout.tv_usec = milliseconds;
+	timeout.tv_usec = milliseconds * 1000; /* microsec*1000
 
 	/* select returns 0 if timeout, 1 if input available, -1 if error. */
 	return (select (FD_SETSIZE, &set, NULL, NULL, &timeout));

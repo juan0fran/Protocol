@@ -6,10 +6,23 @@ typedef enum ErrorHandler{
 	NO_ERROR,
 	IO_ERROR,
 	NO_LINK,
+	HAVE_BEACON,
 }ErrorHandler;
 
-ErrorHandler protocol_establishment_routine (ProtocolControlEvent event, Control * c, Status * s);
-ErrorHandler protocol_control_routine (BYTE * p, Control * c, Status * s);
+typedef enum ProtocolEstablishmentEvent{
+	initialise_link,
+	check_link_availability,
+	desconnect_link,
+}ProtocolEstablishmentEvent;
+
+typedef enum ProtocolControlEvent{
+	control_packet,
+	beacon_send,
+	beacon_recv,
+}ProtocolControlEvent;
+
+ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, Control * c, Status * s);
+ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, Status * s);
 ErrorHandler StopAndWait(Control * c, Status * s);
 
 #endif

@@ -8,6 +8,14 @@
 
 #include <util/log.h>
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 static ErrorGrade log_level_min = LOG_DEBUG;
 
 static char LOG_PATH[LOG_BUFF_SIZE];
@@ -53,7 +61,8 @@ void _log_message(ErrorGrade type, char *filename, char * function, char* fmt, .
         gettimeofday(&epoch_time, NULL);
         gmtime_r(&epoch_time.tv_sec, &gm_time);
         strftime(date, LOG_BUFF_SIZE, "%Y-%m-%d %H:%M:%S", &gm_time);
-        sprintf(msg, "[%s] @ %s -> %s: ", function, date, 
+        /*sprintf(msg, "[%s] @ %s -> %s: ", function, date, */
+        sprintf (msg, "[%s] -> %s: ", function,
         				type == 0 ? "Debug" : type == 1 ? "Info" : type == 2 ? "Warn" : type == 3 ? "Error" : "Critical");
         va_start(args, fmt);
         vsnprintf(tmp_msg, LOG_BUFF_SIZE - 1, fmt, args);
