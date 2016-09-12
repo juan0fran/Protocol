@@ -358,7 +358,7 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 	/* Something in Network Layer -> this has priority when not waiting for ACK */
 	/* Do stop and wait SEND */
 	if (len = read_packet_from_net(c->net_fd, buffer, 0), len < 0){
-		log_message(LOG_ERROR, "Error reading\n");
+		log_message(LOG_ERROR, "Error reading, NET Socket has been closed\n");
 		return IO_ERROR;
 	}
 	if (len > 0){
@@ -384,10 +384,6 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		c->round_trip_time = c->byte_round_trip_time /* * len */ + c->piggy_time;
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
-	}else{
-		log_message(LOG_ERROR, "NET Socket has been closed\n");							
-		/* End of socket */
-		return IO_ERROR;
 	}
 	return NO_ERROR;
 }

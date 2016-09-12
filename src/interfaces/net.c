@@ -89,6 +89,9 @@ int read_packet_from_net(int fd, BYTE * p, int timeout){
 			/* we will read the sie, is a uint16_t */
 		#ifndef __MAC_OS_X__
 			ret = read(fd, p, MTU_SIZE);
+			if (ret <= 0){
+				return -1;
+			}
 			memcpy(&ip_len, p+2, sizeof(uint16_t));
 			len = (int) ntohs(ip_len);
 		#else
