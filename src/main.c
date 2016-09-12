@@ -277,10 +277,14 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 		system(syscall);
 		sprintf(syscall, "ip tuntap add dev %s mode tun", sock_data_net);
 		system(syscall);
-		sprintf(syscall, "ip addr add %s/24 dev %s", ip, sock_data_net);
-		system(syscall);
 		sprintf(syscall, "ip link set dev %s up", sock_data_net);
 		system(syscall);
+        sprintf(syscall, "ifconfig %s %s", sock_data_net, ip);
+        system(syscall);
+        sprintf(syscall, "ip route add %s/24 dev %s", ip, sock_data_net);
+        system(syscall);
+        sprintf(syscall, "ifconfig %s mtu %s", sock_data_net, "240");
+        system(syscall);
   		control.net_fd = tun_alloc(sock_data_net);  /* tun interface */
   	#else
 		control.net_fd = initialise_server_socket(sock_data_net);
