@@ -105,8 +105,8 @@ typedef volatile struct radio_int_data_s
     uint8_t      tx_buf[PI_CCxxx0_PACKET_COUNT_SIZE+2]; // Tx buffer
     uint8_t      tx_count;               // Number of bytes in Tx buffer
     uint8_t      rx_buf[PI_CCxxx0_PACKET_COUNT_SIZE+2]; // Rx buffer
-    uint8_t      rx_count;               // Number of bytes in Rx buffer
-    uint8_t      bytes_remaining;        // Bytes remaining to be read from or written to buffer (composite mode)
+    uint16_t     rx_count;               // Number of bytes in Rx buffer
+    uint16_t     bytes_remaining;        // Bytes remaining to be read from or written to buffer (composite mode)
     uint8_t      byte_index;             // Current byte index in buffer
     uint8_t      packet_receive;         // Indicates reception of a packet is in progress
     uint8_t      packet_send;            // Indicates transmission of a packet is in progress
