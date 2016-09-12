@@ -231,7 +231,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
         if (byte_count > 0)
         {
-            printf("Wait here\n");
             radio_wait_free();            // Make sure no radio operation is in progress
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity
