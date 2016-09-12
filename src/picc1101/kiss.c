@@ -220,7 +220,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         {            
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             radio_turn_rx(spi_parms);            // Turn Rx on
-            verbprintf(2, "Received %d bytes\n", rx_count);
+            verbprintf(2, "Received %d bytes\n", byte_count);
             ret = write_serial(serial_parms, rx_buffer, byte_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
         }
@@ -233,7 +233,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity
 
-            verbprintf(2, "%d bytes to send\n", tx_count);
+            verbprintf(2, "%d bytes to send\n", byte_count);
 
             /* I send the radio packet */
             radio_send_packet(spi_parms, arguments, tx_buffer, byte_count);
