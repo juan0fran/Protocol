@@ -420,7 +420,7 @@ void print_received_packet(int verbose_min)
     crc_lqi  = radio_int_data.rx_buf[radio_int_data.rx_count-1];
     radio_int_data.rx_buf[radio_int_data.rx_count-2] = '\0';
 
-    verbprintf(verbose_min, "%d: (%03d) \"%s\"\n", radio_int_data.rx_buf[1], radio_int_data.rx_buf[0] - 1, &radio_int_data.rx_buf[2]);
+    //erbprintf(verbose_min, "%d: (%03d) \"%s\"\n", radio_int_data.rx_buf[1], radio_int_data.rx_buf[0] - 1, &radio_int_data.rx_buf[2]);
     verbprintf(verbose_min, "RSSI: %.1f dBm. LQI=%d. CRC=%d\n", 
         rssi_dbm(rssi_dec),
         0x7F - (crc_lqi & 0x7F),
@@ -1068,13 +1068,14 @@ uint8_t radio_receive_block(spi_parms_t *spi_parms, arguments_t *arguments, uint
     else
     {
         *crc = (radio_int_data.rx_buf[arguments->packet_length + 1] & 0x80)>>7;
+        printf("crc: %d\n", *crc);
     }
 
     block_size = arguments->packet_length;
     memcpy(block, (uint8_t *) &radio_int_data.rx_buf[0], block_size);
     *size += block_size;
 
-    verbprintf(1, "Rx: packet #%d:%d >%d\n", radio_int_data.packet_rx_count, block_countdown, *size);
+    verbprintf(1, "Rx: packet #%d->%d\n", radio_int_data.packet_rx_count, *size);
     print_received_packet(2);
 
     return block_countdown; // block countdown
