@@ -134,6 +134,8 @@ void int_packet(void)
             {
                 p_radio_int_data->rx_count = p_radio_int_data->packet_length;
                 p_radio_int_data->rx_count += 2; // Add RSSI + LQI/CRC bytes
+                printf("1 RX COUNT should be : %d\n", p_radio_int_data->packet_length);
+                printf("2 RX COUNT should be : %d\n", radio_int_data.packet_length);
                 /*p_radio_int_data->rx_count = p_radio_int_data->packet_length + 2;*/
                 p_radio_int_data->bytes_remaining = p_radio_int_data->rx_count;
 
