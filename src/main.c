@@ -244,8 +244,6 @@ void physical_layer_control(){
 		if (control.initialised == 1){
 			/* Beacon does not understand aboud connection states */
 			/* Just try to send a beacon if any */
-			protocol_control_routine(beacon_send, &control, &status);
-			/* Proceed with S&W */
 			err = StopAndWait(&control, &status);
 			if (err != NO_ERROR){
 				log_message(LOG_ERROR, "Error at S&W protocol: %d\n", err);

@@ -548,7 +548,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 ErrorHandler StopAndWait(Control * c, Status * s){
 	int rv;
 	ErrorHandler err;
-	struct pollfd ufds[2];
+	struct pollfd ufds[3];
 	unsigned long long timeout;
 
 	log_message(LOG_DEBUG, "Print the states: SN: %d RN: %d\n", s->sn, s->rn);
@@ -557,6 +557,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	ufds[0].events = POLLIN; // check for normal data
 	ufds[1].fd = c->phy_fd;
 	ufds[1].events = POLLIN; // check for normal data
+	ufds[2].fd = c->beacon_fd;
+	ufds[2].events = POLLIN;
 
 	if (c->waiting_ack == true){
 		log_message(LOG_DEBUG, "Waiting for a packet from PHY -> do not accept from net\n");
@@ -577,12 +579,21 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 			return (ResendFrame(c, s));
 		}
 	}else{
+		if (ufds[2].revents & POLLIN){
+			err = protocol_control_routine(beacon_send, &control, &status);
+			if (err != NO_ERROR){
+				return err;
+			} 
+		}
 		/* Check the timeout */
 		/* Something arrived from the medium!! */
 		if (ufds[1].revents & POLLIN){
 			/* TODO: MAKE A FUNCTION FOR THAT */
 			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
-			return (RecvPhyFrame(c, s, (int) timeout));
+			err = RecvPhyFrame(c, s, (int) timeout);
+			if (err != NO_ERROR){
+				return err;
+			}
 		}
 		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
 			log_message(LOG_DEBUG, "Something at the NETWORK layer\n");
