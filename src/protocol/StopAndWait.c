@@ -121,7 +121,8 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 	switch (event){
 		case initialise_link:
 			/* Three way handshake, if it is done -> set initialised */
-			if (c->master_slave_flag == SLAVE){ /* we are slaves */
+			if (c->master_slave_flag == SLAVE){ 
+				/* we are slaves */
 				/* Something has been received -> process */
 				/* Do Connection */
 				ret = Connect_Slave(c, s);
@@ -336,7 +337,7 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
 		//c->initialised = 0;
-		c->byte_round_trip_time = 20;
+		c->byte_round_trip_time = c->packet_timeout_time;
 		c->round_trip_time = c->packet_timeout_time;
 		c->waiting_ack = false;
 		flush_phy(c->phy_fd);
