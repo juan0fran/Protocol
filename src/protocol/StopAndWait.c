@@ -575,11 +575,12 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 			return (ResendFrame(c, s));
 		}
 	}else{
-		if (ufds[2].revents & POLLIN){
-			err = protocol_control_routine(beacon_send, c, s);
+		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
+			log_message(LOG_DEBUG, "Something at the NETWORK layer\n");
+			err = SendNetFrame(c, s);
 			if (err != NO_ERROR){
 				return err;
-			} 
+			}
 		}
 		/* Check the timeout */
 		/* Something arrived from the medium!! */
@@ -591,12 +592,11 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 				return err;
 			}
 		}
-		if ((ufds[0].revents & POLLIN) && c->waiting_ack == false){
-			log_message(LOG_DEBUG, "Something at the NETWORK layer\n");
-			err = SendNetFrame(c, s);
+		if (ufds[2].revents & POLLIN){
+			err = protocol_control_routine(beacon_send, c, s);
 			if (err != NO_ERROR){
 				return err;
-			}
+			} 
 		}
 	}
 	return NO_ERROR;
