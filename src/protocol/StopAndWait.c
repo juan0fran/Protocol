@@ -580,7 +580,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		}
 	}else{
 		if (ufds[2].revents & POLLIN){
-			err = protocol_control_routine(beacon_send, &control, &status);
+			err = protocol_control_routine(beacon_send, c, s);
 			if (err != NO_ERROR){
 				return err;
 			} 
