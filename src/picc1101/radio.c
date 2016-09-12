@@ -1094,46 +1094,15 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
     }
     else // block received
     {
-        /*do
-        {*/
-            block_countdown = radio_receive_block(spi_parms, arguments, &packet[packet_size], &packet_size, &crc);
-            radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
-
-            /*if (!block_count)
-            {
-                block_count = block_countdown + 1;
-            }
-
-            block_count--;*/
-
-            /*if (block_count != block_countdown)
-            {
-                verbprintf(1, "RADIO: block sequence error, aborting packet\n");
-                return 0;
-            }*/
-
-            if (!crc)
-            {
-                verbprintf(1, "RADIO: CRC error, aborting packet\n");
-                return 0;
-            }
-
-            /*timeout = timeout_value;
-
-            // Wait for the next block to be received if any is expected
-            while((block_countdown > 0) && (blocks_received == radio_int_data.packet_rx_count) && (timeout))
-            {
-                radio_wait_a_bit(4);
-                timeout--;
-            }
-
-            if (!timeout)
-            {
-                verbprintf(1, "RADIO: timeout waiting for the next block, aborting packet\n");
-                return 0;
-            }*/
-
-        /*} while (block_countdown > 0);*/
+        radio_receive_block(spi_parms, arguments, &packet[packet_size], &packet_size, &crc);
+        radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
+        radio_turn_rx(spi_parms);
+        
+        if (!crc)
+        {
+            verbprintf(1, "RADIO: CRC error, aborting packet\n");
+            return 0;
+        }
 
         packets_received++;
 

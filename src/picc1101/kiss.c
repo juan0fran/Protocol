@@ -219,48 +219,26 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         if (byte_count > 0)
         {            
             rx_count = byte_count;
-            /*if (rtx_toggle) // Tx to Rx transition
-            {
-                tx_trigger = 1; // Push Tx
-            }
-            else
-            {
-                tx_trigger = 0;
-            }
-            rtx_toggle = 0;*/
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive            
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            radio_turn_rx(spi_parms);            // Turn Rx on
         }
+
         byte_count = read_serial(serial_parms, &tx_buffer[tx_count], bufsize - tx_count);
 
         if (byte_count > 0)
         {
             tx_count = byte_count;  // Accumulate Tx
-            /*if (!rtx_toggle) // Rx to Tx transition
-            {
-                rx_trigger = 1;
-            }
-            else
-            {
-                rx_trigger = 0;
-            }
-
-            rtx_toggle = 1;*/
         }
 
-        if ((rx_count > 0)) // Send bytes received on air to serial
+        if (rx_count > 0) // Send bytes received on air to serial
         {
-            radio_wait_free();            // Make sure no radio operation is in progress
-            radio_turn_idle(spi_parms);   // Inhibit radio operations
             verbprintf(2, "Received %d bytes\n", rx_count);
             ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive Rx
-            radio_turn_rx(spi_parms);            // Put back into Rx
             rx_count = 0;
-            rx_trigger = 0;
         }
 
-        if ((tx_count > 0)) // Send bytes received on serial to air 
+        if (tx_count > 0) // Send bytes received on serial to air 
         {
             radio_wait_free();            // Make sure no radio operation is in progress
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
@@ -276,8 +254,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_turn_rx(spi_parms);            // put back into Rx
 
             tx_count = 0;
-            tx_trigger = 0;            
         }
-        radio_wait_a_bit(4);
     }
 }
