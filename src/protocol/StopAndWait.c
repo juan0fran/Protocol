@@ -381,7 +381,7 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		/* This update MUST be done to adapt from the current configuration */
 		/* byte rount trip time is not an exact measurement... */
 		/* But is a nice approximation including the piggy time */
-		c->round_trip_time = c->byte_round_trip_time /* * len */ + c->piggy_time * 2;
+		c->round_trip_time = c->byte_round_trip_time /* * len */ + (c->piggy_time * 2);
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
 	}
@@ -563,7 +563,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		timeout = millitime() - timeout;
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
-		rv = poll(ufds, 2, c->ping_link_time);
+		rv = poll(ufds, 3, c->ping_link_time);
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
@@ -593,6 +593,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 			}
 		}
 		if (ufds[2].revents & POLLIN){
+			log_message(LOG_DEBUG, "Something at the BEACON layer\n");
 			err = protocol_control_routine(beacon_send, c, s);
 			if (err != NO_ERROR){
 				return err;
