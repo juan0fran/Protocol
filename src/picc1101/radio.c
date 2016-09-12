@@ -134,7 +134,7 @@ void int_packet(void)
             {
                 p_radio_int_data->rx_count = radio_get_packet_length(p_radio_int_data->spi_parms);
                 p_radio_int_data->rx_count += 2; // Add RSSI + LQI/CRC bytes
-                p_radio_int_data->rx_count = p_radio_int_data->packet_length + 2;
+                /*p_radio_int_data->rx_count = p_radio_int_data->packet_length + 2;*/
                 p_radio_int_data->bytes_remaining = p_radio_int_data->rx_count;
 
                 verbprintf(3, "%d bytes to read (fixed)\n", p_radio_int_data->rx_count);
@@ -1068,17 +1068,16 @@ uint8_t radio_receive_block(spi_parms_t *spi_parms, arguments_t *arguments, uint
     else
     {
         *crc = (radio_int_data.rx_buf[arguments->packet_length + 1] & 0x80)>>7;
-        printf("crc: %d\n", *crc);
     }
 
     block_size = arguments->packet_length;
     memcpy(block, (uint8_t *) &radio_int_data.rx_buf[0], block_size);
-    *size += block_size;
+    *size = block_size;
 
     verbprintf(1, "Rx: packet #%d->%d\n", radio_int_data.packet_rx_count, *size);
     print_received_packet(2);
 
-    return block_countdown; // block countdown
+    return 0; // block countdown
 }
 
 // ------------------------------------------------------------------------------------------------
