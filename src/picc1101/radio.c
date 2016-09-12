@@ -1086,7 +1086,6 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
 {
     uint8_t  crc, block_countdown, block_count = 0;
     uint32_t packet_size = 0;
-    uint32_t timeout, timeout_value = (arguments->packet_length < 32 ? 16 : arguments->packet_length / 2); // timeout value in bocks of 4 2-FSK bytes
 
     if (blocks_received == radio_int_data.packet_rx_count) // no block received
     {
@@ -1094,10 +1093,10 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
     }
     else // block received
     {
-        radio_receive_block(spi_parms, arguments, &packet[packet_size], &packet_size, &crc);
+        radio_receive_block(spi_parms, arguments, &packet[0], &packet_size, &crc);
         radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
         radio_turn_rx(spi_parms);
-        
+
         if (!crc)
         {
             verbprintf(1, "RADIO: CRC error, aborting packet\n");

@@ -241,9 +241,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             /* Then put the radio to RX again */
             radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
             radio_turn_rx(spi_parms);            // put back into Rx
-
-            tx_count = 0;
         }
-
+        usleep(10 * 1000);
     }
 }
