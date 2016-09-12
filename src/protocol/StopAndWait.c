@@ -126,6 +126,8 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 				/* Do Connection */
 				ret = Connect_Slave(c, s);
 				if (ret == NO_ERROR){
+					c->byte_round_trip_time = c->packet_timeout_time;
+					c->round_trip_time = c->packet_timeout_time;
 					c->initialised = 1;
 					c->waiting_ack = false;
 					c->last_link = millitime();
@@ -137,6 +139,8 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 			}else if (c->master_slave_flag == MASTER){ /* we are masters */
 				ret = Connect_Master(c, s);
 				if (ret == NO_ERROR){
+					c->byte_round_trip_time = c->packet_timeout_time;
+					c->round_trip_time = c->packet_timeout_time;					
 					c->initialised = 1;
 					c->waiting_ack = false;
 					c->last_link = millitime();

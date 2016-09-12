@@ -302,7 +302,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 		/* Ping link time is 10 seconds */
 		control.ping_link_time = 10000;
 		control.piggy_time = 20;
-		control.byte_round_trip_time = 20;
+		control.byte_round_trip_time = 1500;
 		control.packet_timeout_time = 1500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.round_trip_time = control.packet_timeout_time;
 		control.death_link_time = 60000; /* in ms */ /* after 60 seconds without handshake, test again */
