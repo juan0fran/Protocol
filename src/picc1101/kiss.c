@@ -218,6 +218,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
         if (byte_count > 0)
         {            
+            radio_turn_idle(spi_parms);
+            radio_flush_fifos(spi_parms);
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             radio_turn_rx(spi_parms);            // Turn Rx on
             verbprintf(2, "Received %d bytes\n", byte_count);
@@ -240,8 +242,10 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_send_packet(spi_parms, arguments, tx_buffer, byte_count);
 
             /* Then put the radio to RX again */
-            radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
-            radio_turn_rx(spi_parms);            // put back into Rx
+            radio_turn_idle(spi_parms);
+            radio_flush_fifos(spi_parms);
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            radio_turn_rx(spi_parms);           // put back into Rx
         }
     }
 }
