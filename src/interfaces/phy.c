@@ -44,10 +44,11 @@ int input_timeout (int filedes, unsigned int milliseconds){
 
 void flush_phy(int fd){
 	int len;
-	BYTE rx_buf[phy_size];
+	BYTE rx_buf[MTU_SIZE + MTU_OVERHEAD];
 	while(input_timeout(fd, 0) > 0){
 		if (read(fd, &len, sizeof(int)) == 0)
 		{
+			printf("something happens with this?\n");
 			exit(0);
 		}
 	    read(fd, rx_buf, len);
