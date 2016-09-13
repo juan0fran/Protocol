@@ -418,12 +418,13 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	/* This is the most important, read packet from phy */
 	/* This means, try to receive from the medium during c->round_trip_time time */
 	/* read_packet_from_phy will call a method to extract the packets... */
-	if (len = read_packet_from_phy(c->phy_fd, buffer, c->round_trip_time, c, &rs), len < 0){
+	if (len = read_packet_from_phy(c->phy_fd, buffer, timeout, c, &rs), len < 0){
 		log_message(LOG_ERROR, "Error reading\n");
 		return IO_ERROR;
 	}
 	if (len == 0){
 		/* Timeout */
+		log_message(LOG_INFO, "Timeout receiving from phy\n");
 		return NO_ERROR;
 	}
 	/* Now is time to check wheter is that */
