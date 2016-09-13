@@ -214,11 +214,13 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         byte_count = read_serial(serial_parms, tx_buffer, bufsize);
         if (byte_count > 0)
         {
+            tx_count = byte_count;
             tx_trigger = 1;
         }
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
         if (byte_count > 0)
         {
+            rx_count = byte_count;
             rx_trigger = 1;   
         }
         if (rx_trigger){
@@ -226,8 +228,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_flush_fifos(spi_parms);
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             radio_turn_rx(spi_parms);            // Turn Rx on
-            verbprintf(2, "Received %d bytes\n", byte_count);
-            ret = write_serial(serial_parms, rx_buffer, byte_count);
+            verbprintf(2, "Received %d bytes\n", rx_count);
+            ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
             rx_trigger = 0;
         }
@@ -236,10 +238,10 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity
 
-            verbprintf(2, "%d bytes to send\n", byte_count);
+            verbprintf(2, "%d bytes to send\n", tx_count);
 
             /* I send the radio packet */
-            radio_send_packet(spi_parms, arguments, tx_buffer, byte_count);
+            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
 
             /* Then put the radio to RX again */
             radio_turn_idle(spi_parms);
