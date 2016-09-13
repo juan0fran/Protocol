@@ -195,8 +195,9 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
     pfd.events = POLLIN;
     rv = poll(&pfd, 1, -1); /* read without timeout */
     if (rv == -1){
-        perror("Poll error: ");
-        exit(EXIT_FAILURE);
+        perror("Poll error:");
+        return -1;
+        /*exit(EXIT_FAILURE);*/
     }else if (rv == 0){
         return 0;
     }else{
