@@ -459,14 +459,15 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		/* Round trip time will be different if is an ACK or a piggybacking frame */
 		/* pending to fix round trip time */
 		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
-		log_message(LOG_WARN, "Plen: %d, phy size: %d\n", len, c->phy_size);
 		packet_time = floor((double)((double)len/(double)c->phy_size)) + 1.0;
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
 		packet_time = (double) (millitime() - c->timeout) / packet_time;
 		log_message(LOG_WARN, "Packet Time: %f\n", packet_time);
-		c->byte_round_trip_time = (int) floor(packet_time);
+		if ((int) floot(packet_time) < c->byte_round_trip_time){
+			c->byte_round_trip_time = (int) floor(packet_time);
+			log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);			
+		}
 		//c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
-		log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);
 		c->last_link = millitime();
 		/* A new packet (sent from other station) has been received while witing for ACK */
 		if (rs.sn == s->rn){
