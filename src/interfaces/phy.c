@@ -88,7 +88,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 	/* just receive */
 	if (read(fd, &len, sizeof(int)) == 0)
 	{
-		printf("Read 0 bytes here?!\n")
+		printf("Read 0 bytes here?!\n");
 		return 0;
 	}
     read(fd, packet, len);
