@@ -73,7 +73,7 @@ int main(int argc, char ** argv){
 		if ((counter[0]) == 5000){
 			exit(0);
 		}
-		rv = poll(ufds, (argc-1), 2000);
+		rv = poll(ufds, (argc-1), 500);
 		if (rv == -1){
 			perror("poll");
 			/* just return ... */
