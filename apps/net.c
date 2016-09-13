@@ -37,7 +37,7 @@ int main(int argc, char ** argv){
 	int net2;
 	int net1_send;
 	int net2_send;
-	if (argc < 4){
+	if (argc < 3){
 		exit(-1);
 	}
 
@@ -45,11 +45,13 @@ int main(int argc, char ** argv){
 		net1 = initialise_client_socket(argv[1]);
 		net1_send = atoi(argv[3]);
 		net2_send = 0;
-	}else{
+	}else if (argc == 5){
 		net1 = initialise_client_socket(argv[1]);
 		net2 = initialise_client_socket(argv[2]);	
 		net1_send = atoi(argv[3]);
 		net2_send = atoi(argv[4]);
+	}else{
+		exit(1);
 	}
 	
 	int len;
