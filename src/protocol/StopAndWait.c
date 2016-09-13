@@ -463,7 +463,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		/* Filtering the round trip time */
 		/* Round trip time will be different if is an ACK or a piggybacking frame */
 		/* pending to fix round trip time */
-		
+
 		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
 		packet_time = floor((double)((double)len/(double)c->phy_size)) + 1.0;
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
@@ -602,7 +602,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 3, c->ping_link_time);
-		timeout = c->packet_timeout_time;
+		timeout = 0;
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
