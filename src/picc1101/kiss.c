@@ -215,6 +215,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
     while(1)
     {    
+        
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
 
         if (byte_count > 0)
@@ -237,17 +238,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             rtx_toggle = 0;
-        }else{
-            rx_count = 0;
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
-            if (rtx_toggle) // Tx to Rx transition
-            {
-                tx_trigger = 1; // Push Tx
-            }
-            else
-            {
-                tx_trigger = 0;
-            }
         }
 
         byte_count = read_serial(serial_parms, &tx_buffer[tx_count], bufsize - tx_count);
@@ -272,16 +262,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
             rtx_toggle = 1;
         }
-        if (!force_mode)
-        {
-            gettimeofday(&tp, NULL);
-
-            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
-            {
-                force_mode = 1;
-            }                        
-        }
-        
+       
         if ((rx_count > 0) && ((rx_trigger) || (force_mode))) // Send bytes received on air to serial
         {
             radio_wait_free();            // Make sure no radio operation is in progress
@@ -295,16 +276,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rx_trigger = 0;
         }
 
-        if (!force_mode)
-        {
-            gettimeofday(&tp, NULL);
-
-            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
-            {
-                force_mode = 1;
-            }                        
-        }
-    
         if ((tx_count > 0) && ((tx_trigger) || (force_mode))) // Send bytes received on serial to air 
         {
             if (!kiss_command(tx_buffer))
@@ -331,6 +302,16 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         }
     }
 
+    if (!force_mode)
+    {
+        gettimeofday(&tp, NULL);
+
+        if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
+        {
+            force_mode = 1;
+        }                        
+    }
+    
     #if 0
     while(1)
     {
