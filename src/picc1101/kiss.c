@@ -215,7 +215,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
     while(1)
     {    
-        
+
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
 
         if (byte_count > 0)
@@ -268,8 +268,10 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_wait_free();            // Make sure no radio operation is in progress
             radio_turn_idle(spi_parms);   // Inhibit radio operations
             verbprintf(2, "Received %d bytes\n", rx_count);
-            ret = write_serial(serial_parms, rx_buffer, rx_count);
-            verbprintf(2, "Sent %d bytes on serial\n", ret);
+            if (rx_count > 0){
+                ret = write_serial(serial_parms, rx_buffer, rx_count);
+                verbprintf(2, "Sent %d bytes on serial\n", ret);
+            }
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive Rx
             radio_turn_rx(spi_parms);            // Put back into Rx
             rx_count = 0;
