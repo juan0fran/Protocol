@@ -126,36 +126,24 @@ speed_t get_serial_speed(uint32_t speed, uint32_t *speed_n)
 }
 
 int openUnixSocket(char * sock_path){
-    struct sockaddr_un addr;
     int fd;
-    int client_fd;
+    struct sockaddr_un addr;
+
     if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");
-        exit(EXIT_FAILURE);
-    }
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, sock_path, sizeof(addr.sun_path)-1);
-
-    unlink(sock_path);
-
-    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-        perror("bind error");
-        exit(EXIT_FAILURE);
-    }
-
-    /** Give permission to the file, so others can access without SUDO in case if needed */
-
-    if (listen(fd, 5) == -1) {
-        perror("listen error");
-        exit(EXIT_FAILURE);
-    }
-
-    if ( (client_fd = accept(fd, NULL, NULL)) == -1) {
-        perror("accept error");
         exit(-1);
     }
-    return client_fd;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        perror("connect error");
+        exit(-1);
+    }
+
+    return fd;
 }
 
 void set_serial_parameters(serial_t *serial_parameters, arguments_t *arguments)
