@@ -93,7 +93,7 @@ static void     get_chanbw_words(float bw, radio_parms_t *radio_parms);
 static void     get_rate_words(arguments_t *arguments, radio_parms_t *radio_parms);
 static void     wait_for_state(spi_parms_t *spi_parms, ccxxx0_state_t state, uint32_t timeout);
 static void     print_received_packet(int verbose_min);
-static void     radio_send_block(spi_parms_t *spi_parms);
+static void     radio_send_block(spi_parms_t *spi_parms, uint8_t block_countdown);
 static uint8_t  radio_receive_block(spi_parms_t *spi_parms, arguments_t *arguments, uint8_t *block, uint32_t *size, uint8_t *crc);
 static uint8_t  crc_check(uint8_t *block);
 
@@ -1139,7 +1139,7 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
 
 // ------------------------------------------------------------------------------------------------
 // Transmission of a block
-void radio_send_block(spi_parms_t *spi_parms)
+void radio_send_block(spi_parms_t *spi_parms, uint8_t block_countdown)
 // ------------------------------------------------------------------------------------------------
 {
     uint8_t  initial_tx_count; // Number of bytes to send in first batch
