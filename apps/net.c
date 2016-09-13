@@ -33,11 +33,19 @@ int main(int argc, char ** argv){
 	int counter[2];
 	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
 	FILE * fp;
-	if (argc != 3){
+	int net1;
+	int net2;
+	if (argc < 2){
 		exit(-1);
 	}
-	int net1 = initialise_client_socket(argv[1]);
-	int net2 = initialise_client_socket(argv[2]);
+
+	if (argc == 2){
+		net1 = initialise_client_socket(argv[1]);
+	}else{
+		net1 = initialise_client_socket(argv[1]);
+		net2 = initialise_client_socket(argv[2]);	
+	}
+	
 	int len;
 	printf("Client has been initialised\n");
  	srandom((unsigned)time(NULL));
@@ -55,7 +63,7 @@ int main(int argc, char ** argv){
 		if ((counter[0]) == 5000){
 			exit(0);
 		}
-		rv = poll(ufds, 2, 2000);
+		rv = poll(ufds, (argc-1), 2000);
 		if (rv == -1){
 			perror("poll");
 			/* just return ... */
@@ -78,17 +86,19 @@ int main(int argc, char ** argv){
 			/* This will also simulate transmission time */
 			/* a packet every 500 ms, each side will send a packet every second */
 		}else{
-			if (ufds[1].revents & POLLIN){
-				ret = read(ufds[1].fd, &len, sizeof(int));
-				if (ret <= 0){
-					break;
-				}
-				read(ufds[1].fd, buffer, len);
-				printf("Received from 1: %s", buffer);
-				fp = fopen("recv_from_1.txt", "a+");
-				if (fp != NULL){
-					fprintf(fp, "%s", buffer);
-					fclose(fp);
+			if (argc == 3){
+				if (ufds[1].revents & POLLIN){
+					ret = read(ufds[1].fd, &len, sizeof(int));
+					if (ret <= 0){
+						break;
+					}
+					read(ufds[1].fd, buffer, len);
+					printf("Received from 1: %s", buffer);
+					fp = fopen("recv_from_1.txt", "a+");
+					if (fp != NULL){
+						fprintf(fp, "%s", buffer);
+						fclose(fp);
+					}
 				}
 			}
 			if (ufds[0].revents & POLLIN){
