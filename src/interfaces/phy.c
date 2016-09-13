@@ -91,7 +91,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
         block_countdown = radio_receive(fd, packet, &block_total);
         if (block_count != block_countdown)
         {
-            //printf("RADIO: block sequence error, aborting packet\n");
+            printf("RADIO: block sequence error, aborting packet\n");
             flush_phy(fd);
             return 0;
         }
@@ -109,7 +109,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 				return 0;
 			}else{
 				/* Less timeout */
-				timeout -= (millitime() - rx_start);
+				//timeout -= (millitime() - rx_start);
 				printf("Timeout restante: %d\n", timeout);
 				rx_start = millitime();
 			}
