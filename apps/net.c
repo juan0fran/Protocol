@@ -45,7 +45,7 @@ int main(int argc, char ** argv){
 	printf("ARGC is: %d\n", argc);
 	if (argc == 3){
 		net1 = initialise_client_socket(argv[1]);
-		net1_send = atoi(argv[3]);
+		net1_send = atoi(argv[2]);
 		net2_send = 0;
 	}else if (argc == 5){
 		net1 = initialise_client_socket(argv[1]);
