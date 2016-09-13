@@ -37,19 +37,19 @@ int main(int argc, char ** argv){
 	int net2;
 	int net1_send;
 	int net2_send;
-	if (argc < 2){
+	if (argc < 4){
 		exit(-1);
 	}
 
-	if (argc == 2){
+	if (argc == 3){
 		net1 = initialise_client_socket(argv[1]);
-		net1_send = -1;
-		net2_send = 100;
+		net1_send = atoi(argv[3]);
+		net2_send = 0
 	}else{
 		net1 = initialise_client_socket(argv[1]);
 		net2 = initialise_client_socket(argv[2]);	
-		net1_send = -1;
-		net2_send = -1;
+		net1_send = atoi(argv[3]);
+		net2_send = atoi(argv[4]);
 	}
 	
 	int len;
@@ -92,7 +92,7 @@ int main(int argc, char ** argv){
 			/* This will also simulate transmission time */
 			/* a packet every 500 ms, each side will send a packet every second */
 		}else{
-			if (argc == 3){
+			if (argc == 5){
 				if (ufds[1].revents & POLLIN){
 					ret = read(ufds[1].fd, &len, sizeof(int));
 					if (ret <= 0){
