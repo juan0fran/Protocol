@@ -136,7 +136,7 @@ int openUnixSocket(char * sock_path){
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+    strncpy(addr.sun_path, sock_path, sizeof(addr.sun_path)-1);
 
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         perror("connect error");
