@@ -236,6 +236,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             }
 
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            radio_turn_rx(spi_parms);            // Put back into Rx
             rtx_toggle = 0;
         }
 
@@ -309,6 +310,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
         if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
         {
+            printf("Forcing mode\n");
             force_mode = 1;
         }                        
     }

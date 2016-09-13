@@ -164,6 +164,8 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 				if (((int) (millitime() - c->last_link )) >= c->ping_link_time){
 					/* Still not death but in ping time */
 					/* Make a control frame send */
+					c->byte_round_trip_time = 0;
+					c->round_trip_time = c->packet_timeout_time;
 					ret = protocol_control_routine(control_packet, c, s);
 					if (ret == IO_ERROR){
 						log_message(LOG_ERROR, "Error at protocol control: %d\n", ret);
@@ -346,10 +348,11 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
 		//c->initialised = 0;
-		c->byte_round_trip_time = 0;
-		c->round_trip_time = c->packet_timeout_time;
+		//c->byte_round_trip_time = 0;
+		//c->round_trip_time = c->packet_timeout_time;
 		c->waiting_ack = false;
 		flush_phy(c->phy_fd);
+		flush_net(c->net_fd);
 		return NO_ERROR;
 	}
 	s->type = s->stored_type;
@@ -454,11 +457,13 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		log_message(LOG_INFO, "Good packet while waiting for ACK. s->sn updated\n");
 		s->sn = rs.rn;
 		c->waiting_ack = false;
+
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
 		/* Filtering the round trip time */
 		/* Round trip time will be different if is an ACK or a piggybacking frame */
 		/* pending to fix round trip time */
+		
 		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
 		packet_time = floor((double)((double)len/(double)c->phy_size)) + 1.0;
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
@@ -468,7 +473,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 			c->byte_round_trip_time = (int) floor(packet_time);
 			log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);			
 		}
-		//c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
+
 		c->last_link = millitime();
 		/* A new packet (sent from other station) has been received while witing for ACK */
 		if (rs.sn == s->rn){
@@ -596,7 +601,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		timeout = millitime() - timeout;
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
-		rv = poll(ufds, 3, c->packet_timeout_time);
+		rv = poll(ufds, 3, c->ping_link_time);
 		timeout = c->packet_timeout_time;
 	}
 	/* Wait for EVENT */
@@ -621,7 +626,6 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		if (ufds[1].revents & POLLIN){
 			/* TODO: MAKE A FUNCTION FOR THAT */
 			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
-			timeout = 1500;
 			err = RecvPhyFrame(c, s, (int) timeout);
 			if (err != NO_ERROR){
 				return err;

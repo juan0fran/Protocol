@@ -112,7 +112,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
         if(block_count < block_total){
 			rv = poll(&pfd, 1, timeout);
 			if (rv == -1){
-				printf("Error with poll here\n", rv);
+				printf("Error with poll here %d\n", rv);
 				return -1;
 			}else if (rv == 0){
 				printf("RADIO: timeout waiting for the next block, aborting packet\n");
