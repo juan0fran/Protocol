@@ -266,15 +266,11 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rtx_toggle = 1;
         }
 
-        if ((rx_count > 0) && ((rx_trigger) || (force_mode))) // Send bytes received on air to serial
+        if (rx_count > 0) // Send bytes received on air to serial
         {
-            radio_wait_free();            // Make sure no radio operation is in progress
-            radio_turn_idle(spi_parms);   // Inhibit radio operations
             verbprintf(2, "Received %d bytes\n", rx_count);
             ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive Rx
-            radio_turn_rx(spi_parms);            // Put back into Rx
             rx_count = 0;
             rx_trigger = 0;
         }
