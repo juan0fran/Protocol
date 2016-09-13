@@ -497,7 +497,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 					log_message(LOG_WARN, "Going to send a piggybacking from a piggybacking packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
-					return (SendNetFrame(c, s));
+					return NO_ERROR;
+					/* return (SendNetFrame(c, s)); */
 					/*return NO_ERROR;*/
 				}
 			}
@@ -534,7 +535,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 					log_message(LOG_WARN, "Going to send a piggybacking from a new packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
-					return (SendNetFrame(c, s));
+					return NO_ERROR;
+					/* return (SendNetFrame(c, s)); */
 				}
 			}
 			if (rs.type == 'C'){

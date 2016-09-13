@@ -133,8 +133,8 @@ void int_packet(void)
             }
             else
             {
-                p_radio_int_data->rx_count = p_radio_int_data->packet_length;
-                p_radio_int_data->rx_count += 2; // Add RSSI + LQI/CRC bytes
+                p_radio_int_data->rx_count = p_radio_int_data->packet_length + 2;
+                p_radio_int_data->bytes_remaining = p_radio_int_data->rx_count;
                 p_radio_int_data->bytes_remaining = p_radio_int_data->rx_count;
 
                 verbprintf(3, "%d bytes to read (fixed)\n", p_radio_int_data->rx_count);
@@ -1054,13 +1054,9 @@ uint8_t radio_receive_block(spi_parms_t *spi_parms, arguments_t *arguments, uint
 {
     uint8_t block_countdown, block_size;
 
-    /* varible size */
-    /* Neither block size -> we have fixed 255 bytes */
-    
-    /*block_size = radio_int_data.rx_buf[0] - 1; // remove block countdown byte
-    block_countdown = radio_int_data.rx_buf[1];*/
+    block_size = radio_int_data.rx_buf[0] - 1; // remove block countdown byte
+    block_countdown = radio_int_data.rx_buf[1];
 
-    /* there is never variable length */
     if (arguments->variable_length)
     {
         *crc = (radio_int_data.rx_buf[radio_int_data.rx_count - 1] & 0x80)>>7;
@@ -1070,14 +1066,13 @@ uint8_t radio_receive_block(spi_parms_t *spi_parms, arguments_t *arguments, uint
         *crc = (radio_int_data.rx_buf[arguments->packet_length + 1] & 0x80)>>7;
     }
 
-    block_size = arguments->packet_length;
-    memcpy(block, (uint8_t *) &radio_int_data.rx_buf[0], block_size);
-    *size = block_size;
+    memcpy(block, (uint8_t *) &radio_int_data.rx_buf[2], block_size);
+    *size += block_size;
 
-    verbprintf(1, "Rx: packet #%d->%d\n", radio_int_data.packet_rx_count, *size);
+    verbprintf(1, "Rx: packet #%d:%d >%d\n", radio_int_data.packet_rx_count, block_countdown, *size);
     print_received_packet(2);
 
-    return 0; // block countdown
+    return block_countdown;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1087,6 +1082,7 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
 {
     uint8_t  crc, block_countdown, block_count = 0;
     uint32_t packet_size = 0;
+    uint32_t timeout, timeout_value = (arguments->packet_length < 32 ? 16 : arguments->packet_length / 2); // timeout value in bocks of 4 2-FSK bytes
 
     if (blocks_received == radio_int_data.packet_rx_count) // no block received
     {
@@ -1094,15 +1090,46 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
     }
     else // block received
     {
-        radio_receive_block(spi_parms, arguments, &packet[0], &packet_size, &crc);
-        radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
-        radio_turn_rx(spi_parms);
-
-        if (!crc)
+        do
         {
-            verbprintf(1, "RADIO: CRC error, aborting packet\n");
-            return 0;
-        }
+            block_countdown = radio_receive_block(spi_parms, arguments, &packet[packet_size], &packet_size, &crc);
+            radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
+
+            if (!block_count)
+            {
+                block_count = block_countdown + 1;
+            }
+
+            block_count--;
+
+            if (block_count != block_countdown)
+            {
+                verbprintf(1, "RADIO: block sequence error, aborting packet\n");
+                return 0;
+            }
+
+            if (!crc)
+            {
+                verbprintf(1, "RADIO: CRC error, aborting packet\n");
+                return 0;
+            }
+
+            timeout = timeout_value;
+
+            // Wait for the next block to be received if any is expected
+            while((block_countdown > 0) && (blocks_received == radio_int_data.packet_rx_count) && (timeout))
+            {
+                radio_wait_a_bit(4);
+                timeout--;
+            }
+
+            if (!timeout)
+            {
+                verbprintf(1, "RADIO: timeout waiting for the next block, aborting packet\n");
+                return 0;
+            }
+
+        } while (block_countdown > 0);
 
         packets_received++;
 
@@ -1155,24 +1182,37 @@ void radio_send_block(spi_parms_t *spi_parms)
 void radio_send_packet(spi_parms_t *spi_parms, arguments_t *arguments, uint8_t *packet, uint32_t size)
 // ------------------------------------------------------------------------------------------------
 {
+    int     block_countdown = size / (arguments->packet_length - 2);
+    uint8_t *block_start = packet;
     uint8_t block_length;
 
     radio_int_data.tx_count = arguments->packet_length; // same block size for all
-    block_length = size;
 
-    /* there is no variable length */
-    if (arguments->variable_length)
+    while (block_countdown >= 0)
     {
-        radio_int_data.tx_count = block_length + 2;
+        block_length = (size > arguments->packet_length - 2 ? arguments->packet_length - 2 : size);
+
+        if (arguments->variable_length)
+        {
+            radio_int_data.tx_count = block_length + 2;
+        }
+
+        memset((uint8_t *) radio_int_data.tx_buf, 0, arguments->packet_length);
+        memcpy((uint8_t *) &radio_int_data.tx_buf[2], block_start, block_length);
+        radio_int_data.tx_buf[0] = block_length + 1; // size takes countdown counter into account
+        radio_int_data.tx_buf[1] = (uint8_t) block_countdown; 
+
+        radio_send_block(spi_parms, block_countdown);
+
+        if (block_countdown > 0)
+        {
+            radio_wait_a_bit(arguments->packet_delay);
+        }
+
+        block_start += block_length;
+        size -= block_length;
+        block_countdown--;
     }
-    memset((uint8_t *) radio_int_data.tx_buf, 0, arguments->packet_length);
-    memcpy((uint8_t *) &radio_int_data.tx_buf[0], packet, block_length);
-    
-    /* put out the lengths and countdowns */
-    /*radio_int_data.tx_buf[0] = block_length + 1; // size takes countdown counter into account
-    radio_int_data.tx_buf[1] = (uint8_t) block_countdown;  */
-    radio_send_block(spi_parms);
-    /* block start should be == block length */
     packets_sent++;
 }
 

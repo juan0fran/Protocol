@@ -215,13 +215,11 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
     while(1)
     {    
-        if (rx_count == 0){
-            byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
-        }
+        byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
 
         if (byte_count > 0)
         {
-            rx_count = byte_count;  // Accumulate Rx
+            rx_count += byte_count;  // Accumulate Rx
             
             gettimeofday(&tp, NULL);
             timestamp = tp.tv_sec * 1000000ULL + tp.tv_usec;
@@ -241,13 +239,11 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rtx_toggle = 0;
         }
 
-        if (tx_count  == 0){
-            byte_count = read_serial(serial_parms, &tx_buffer[0], bufsize);
-        }
+        byte_count = read_serial(serial_parms, &tx_buffer[tx_count], bufsize - tx_count);
 
         if (byte_count > 0)
         {
-            tx_count = byte_count;  // Accumulate Tx
+            tx_count += byte_count;  // Accumulate Tx
 
             gettimeofday(&tp, NULL);
             timestamp = tp.tv_sec * 1000000ULL + tp.tv_usec;
@@ -266,32 +262,39 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rtx_toggle = 1;
         }
 
-        if (rx_count > 0) // Send bytes received on air to serial
+        if ((rx_count > 0) && ((rx_trigger) || (force_mode))) // Send bytes received on air to serial
         {
+            radio_wait_free();            // Make sure no radio operation is in progress
+            radio_turn_idle(spi_parms);   // Inhibit radio operations
             verbprintf(2, "Received %d bytes\n", rx_count);
             ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive Rx
+            radio_turn_rx(spi_parms);            // Put back into Rx
             rx_count = 0;
             rx_trigger = 0;
         }
 
         if ((tx_count > 0) && ((tx_trigger) || (force_mode))) // Send bytes received on serial to air 
         {
-            radio_wait_free();            // Make sure no radio operation is in progress
-            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
-            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
-
-            verbprintf(2, "%d bytes to send\n", tx_count);
-
-            if (tnc_tx_keyup_delay)
+            if (!kiss_command(tx_buffer))
             {
-                usleep(tnc_tx_keyup_delay);
+                radio_wait_free();            // Make sure no radio operation is in progress
+                radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+                radio_flush_fifos(spi_parms); // Flush result of any Rx activity
+
+                verbprintf(2, "%d bytes to send\n", tx_count);
+
+                if (tnc_tx_keyup_delay)
+                {
+                    usleep(tnc_tx_keyup_delay);
+                }
+
+                radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
+
+                radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
+                radio_turn_rx(spi_parms);            // put back into Rx
             }
-
-            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
-
-            radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
-            radio_turn_rx(spi_parms);            // put back into Rx
 
             tx_count = 0;
             tx_trigger = 0;            
@@ -306,9 +309,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
                 force_mode = 1;
             }                        
         }
-
         radio_wait_a_bit(4);
-}
+    }
 
     #if 0
     while(1)
