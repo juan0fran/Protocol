@@ -619,6 +619,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		if (ufds[1].revents & POLLIN){
 			/* TODO: MAKE A FUNCTION FOR THAT */
 			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
+			timeout = 500;
 			err = RecvPhyFrame(c, s, (int) timeout);
 			if (err != NO_ERROR){
 				return err;
