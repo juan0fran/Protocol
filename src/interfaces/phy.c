@@ -95,6 +95,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
             flush_phy(fd);
             return 0;
         }
+        printf("Block received: %d from %d\n", block_countdown, block_total);
         block_count++;
         // Wait for the next block to be received if any is expected
         if(block_count < block_total){
