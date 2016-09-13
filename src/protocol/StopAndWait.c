@@ -130,7 +130,7 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 				/* Do Connection */
 				ret = Connect_Slave(c, s);
 				if (ret == NO_ERROR){
-					c->byte_round_trip_time = c->packet_timeout_time;
+					c->byte_round_trip_time = 0;
 					c->round_trip_time = c->packet_timeout_time;
 					c->initialised = 1;
 					c->waiting_ack = false;
@@ -143,7 +143,7 @@ ErrorHandler protocol_establishment_routine (ProtocolEstablishmentEvent event, C
 			}else if (c->master_slave_flag == MASTER){ /* we are masters */
 				ret = Connect_Master(c, s);
 				if (ret == NO_ERROR){
-					c->byte_round_trip_time = c->packet_timeout_time;
+					c->byte_round_trip_time = 0;
 					c->round_trip_time = c->packet_timeout_time;					
 					c->initialised = 1;
 					c->waiting_ack = false;
@@ -346,8 +346,8 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
 		//c->initialised = 0;
-		c->byte_round_trip_time = c->packet_timeout_time;
-		c->round_trip_time = lround(ceil((double) c->byte_round_trip_time * (s->stored_len/c->phy_size)));
+		c->byte_round_trip_time = 0;
+		c->round_trip_time = c->packet_timeout_time;
 		c->waiting_ack = false;
 		flush_phy(c->phy_fd);
 		return NO_ERROR;
@@ -390,7 +390,11 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		/* This update MUST be done to adapt from the current configuration */
 		/* byte rount trip time is not an exact measurement... */
 		/* But is a nice approximation including the piggy time */
-		c->round_trip_time = (c->byte_round_trip_time * lround(1.0 + floor((double) (len/c->phy_size)))) + (c->piggy_time * 2);
+		if (c->byte_round_trip_time == 0){
+			c->round_trip_time = c->packet_timeout_time;
+		}else{
+			c->round_trip_time = (c->byte_round_trip_time * lround(1.0 + floor((double) (len/c->phy_size)))) + (c->piggy_time * 2);
+		}
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
 	}
