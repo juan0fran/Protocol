@@ -1094,7 +1094,8 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
         {
             block_countdown = radio_receive_block(spi_parms, arguments, &packet[packet_size], &packet_size, &crc);
             radio_init_rx(spi_parms, arguments); // init for new block to receive Rx
-
+            radio_turn_rx(spi_parms);            // put back into Rx                
+            
             if (!block_count)
             {
                 block_count = block_countdown + 1;
