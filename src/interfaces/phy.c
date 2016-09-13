@@ -89,7 +89,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 	if (read(fd, &len, sizeof(int)) == 0)
 	{
 		printf("Read 0 bytes here?!\n");
-		return 0;
+		exit(0);
 	}
     read(fd, packet, len);
     return len;
@@ -111,7 +111,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
         if(block_count < block_total){
 			rv = poll(&pfd, 1, timeout);
 			if (rv == -1){
-				perror ("Error with poll: ");
+				printf("Error with poll here\n", rv);
 				return -1;
 			}else if (rv == 0){
 				printf("RADIO: timeout waiting for the next block, aborting packet\n");
@@ -258,7 +258,7 @@ int read_packet_from_phy(int fd, BYTE * p, int timeout, Control * c, Status * s)
 		/* CRC */
 		return len;
 	}else{
-		//printf("Timeout or wrong sequence\n");
+		printf("Timeout or wrong sequence\n");
 		return 0;
 	}
 }
