@@ -84,6 +84,15 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 	struct pollfd pfd;
 	int block_count = 0;
 	/* timeout val is -> you have up to that timeout to receive something */
+
+	/* just receive */
+	if (read(fd, &len, sizeof(int)) == 0)
+	{
+		exit(0);
+	}
+    read(fd, packet, len);
+    return len;
+    
 	pfd.fd = fd;
 	pfd.events = POLLIN;
 	printf("Timeout inicial: %d\n", timeout_val);
@@ -124,6 +133,12 @@ static void radio_send_block(int fd, BYTE * packet, uint16_t size){
     BYTE *block_start = packet;
     BYTE block_length;
     BYTE tx_buf[phy_size];
+
+    int tosend_size = (int) size;
+    write(fd, &tosend_size, sizeof(int));
+    write(fd, packet, tosend_size);
+
+    return;
 
     while (block_countdown < block_total)
     {

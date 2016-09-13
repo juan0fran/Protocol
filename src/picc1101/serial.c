@@ -164,7 +164,6 @@ void set_serial_parameters(serial_t *serial_parameters, arguments_t *arguments)
     serial_parameters->sock_fd = openUnixSocket(arguments->serial_device);
 }
 
-#define __USE_SOCAT__
 
 int write_serial(serial_t *serial_parameters, char *msg, int msglen)
 // ------------------------------------------------------------------------------------------------
