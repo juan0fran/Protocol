@@ -1082,7 +1082,7 @@ uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, ui
 {
     uint8_t  crc, block_countdown, block_count = 0;
     uint32_t packet_size = 0;
-    uint32_t timeout, timeout_value = (arguments->packet_length < 32 ? 16 : arguments->packet_length / 2); // timeout value in bocks of 4 2-FSK bytes
+    uint32_t timeout, timeout_value = (arguments->packet_length < 32 ? 16 : arguments->packet_length); // timeout value in bocks of 4 2-FSK bytes
 
     if (blocks_received == radio_int_data.packet_rx_count) // no block received
     {
