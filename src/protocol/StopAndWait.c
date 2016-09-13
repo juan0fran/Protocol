@@ -85,7 +85,6 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 		case beacon_send:
 			/* log_message(LOG_DEBUG, "Trying to get a beacon from up\n"); */
 			if (input_timeout(c->beacon_fd, 0) > 0){
-				log_message(LOG_DEBUG, "Something to read!!\n");
 				len = read(c->beacon_fd, buffer, MTU_SIZE);
 				if (len == 0){
 					log_message(LOG_ERROR, "Error reading\n");
@@ -277,7 +276,9 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 			return NO_LINK;
 		}
 		if (pfds[1].revents & POLLIN){
-			protocol_control_routine(beacon_send, c, s);
+			if (protocol_control_routine(beacon_send, c, s) == IO_ERROR){
+				return IO_ERROR;
+			}
 		}
 		if (pfds[0].revents & POLLIN){
 			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){

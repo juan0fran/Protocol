@@ -517,6 +517,8 @@ int main (int argc, char **argv)
         /* do not catch sigpoll */ 
         if (i == SIGPOLL)
             continue;
+        if (i == 29)
+            continue;
         // These are uncatchable or harmless or we want a core dump (SEGV) 
         if (i != SIGKILL
             && i != SIGSEGV
