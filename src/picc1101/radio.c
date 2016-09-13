@@ -159,8 +159,6 @@ void int_packet(void)
                 radio_int_data.mode = RADIOMODE_NONE;
                 p_radio_int_data->packet_receive = 0; // reception is done
                 p_radio_int_data->packet_rx_count++;
-                /* Rise signal! */
-                raise(SIGIO);
             }            
         }        
     }    
