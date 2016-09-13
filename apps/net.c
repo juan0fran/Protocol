@@ -37,10 +37,12 @@ int main(int argc, char ** argv){
 	int net2;
 	int net1_send;
 	int net2_send;
+
 	if (argc < 3){
+		printf("now enough argc\n");
 		exit(-1);
 	}
-
+	printf("ARGC is: %d\n", argc);
 	if (argc == 3){
 		net1 = initialise_client_socket(argv[1]);
 		net1_send = atoi(argv[3]);
