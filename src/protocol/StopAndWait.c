@@ -593,6 +593,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 3, c->ping_link_time);
+		timeout = c->packet_timeout_time;
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
