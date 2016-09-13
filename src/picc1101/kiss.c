@@ -187,6 +187,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 {
     static const size_t   bufsize = RADIO_BUFSIZE;
     uint32_t timeout_value;
+    int      force_mode;
+    int      rtx_toggle;
     uint8_t  rx_buffer[bufsize], tx_buffer[bufsize];
     uint8_t  rx_trigger; 
     uint8_t  tx_trigger; 
@@ -202,6 +204,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     
     verbprintf(1, "Starting...\n");
 
+    force_mode = 0;
+    rtx_toggle = 0;
     rx_trigger = 0;
     tx_trigger = 0;
     rx_count = 0;
