@@ -82,20 +82,20 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 	int rx_start = millitime();
 	int rv;
 	struct pollfd pfd;
-	BYTE block_count = 0;
+	int block_count = 0;
 	/* timeout val is -> you have up to that timeout to receive something */
 	pfd.fd = fd;
 	pfd.events = POLLIN;
 	printf("Timeout inicial: %d\n", timeout_val);
 	do{
         block_countdown = radio_receive(fd, packet, &block_total);
+        printf("Block received: %d from %d\n", block_countdown, block_total);
         if (block_count != block_countdown)
         {
             printf("RADIO: block sequence error, aborting packet\n");
             flush_phy(fd);
             return 0;
         }
-        printf("Block received: %d from %d\n", block_countdown, block_total);
         block_count++;
         // Wait for the next block to be received if any is expected
         if(block_count < block_total){
