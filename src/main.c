@@ -27,8 +27,7 @@ typedef struct arguments_t{
 	char 		*net_socket;
 	char 		*beacon_socket;
 	char 		*ip_addr;
-	uint8_t		master;
-	uint8_t		slave;
+    int         phy_size;
 	uint8_t     debug_level;        // Verbose level
     uint8_t     print_long_help;	// Print a long help and exit
 
@@ -46,8 +45,7 @@ static struct argp_option options[] = {
 	{"net_socket", 'N', "/path/to/file", 0, "Set network layer unix socket file!"},
 	{"beacon_socket", 'B', "/path/to/file", 0, "Set beacon layer unix socket file!"},
 	{"ip_addr", 'I', "x.x.x.x", 0, "IP address of tunnel"},
-	{"master", 'M', "0", 0, "Set as MASTER device"},
-	{"slave", 'S', "0", 0, "Set as SLAVE device"},
+	{"phy_size", 'L', "255", 0, "Size of physical controller"},
     {"debug_level", 'D', "#number", 0, "Set debug level from 0 (LOG_DEBUG) to 4 (LOG_CRITICAL)"},
     {"long-help",  'H', 0, 0, "Print a long help and exit"},
     {0},
@@ -66,8 +64,7 @@ static void init_args(arguments_t *arguments)
 
     arguments->ip_addr = strdup("10.0.0.1");
     /** The usrp by default will be at /usr/bin/. */
-    arguments->master = 0;
-    arguments->slave = 0;
+    arguments->phy_size = 255;
 }
 
 static int isDirectory(const char *path) {
@@ -156,12 +153,9 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
         case 'H':
             arguments->print_long_help = 1;
             break;
-        case 'M':
-        	arguments->master = strtol(arg, &end, 10);
-        	break;	
-    	case 'S':
-    		arguments->slave = strtol(arg, &end, 10);
-        	break;	
+        case 'L':
+            arguments->phy_size = strtol(arg, &end, 10);
+            break;
         case 'D':
             arguments->debug_level = strtol(arg, &end, 10);
             if (*end){
@@ -262,7 +256,7 @@ void physical_layer_control(){
 
 int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_data_beacon, char * ip){
 	char syscall[256];
-	init_radio(255);
+	init_radio(arguments.phy_size);
 	log_init(arguments.debug_level, NULL, 0);
 	while (1){
 		log_message(LOG_DEBUG, "Connect sockets\n");
@@ -299,6 +293,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 		control.initialised = 0;
 		control.packet_counter = 3;
 		/* Ping link time is 10 seconds */
+        control.phy_size = arguments.phy_size;
 		control.ping_link_time = 60000;
 		control.piggy_time = 10;
 		control.byte_round_trip_time = 500;

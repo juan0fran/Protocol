@@ -338,7 +338,7 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		/* Every packet sent c->timeout is set */
 		//c->initialised = 0;
 		c->byte_round_trip_time = c->packet_timeout_time;
-		c->round_trip_time = c->packet_timeout_time;
+		c->round_trip_time = lround(ceil((double) c->byte_round_trip_time * (s->stored_len/c->phy_size)));
 		c->waiting_ack = false;
 		flush_phy(c->phy_fd);
 		return NO_ERROR;
@@ -381,7 +381,7 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		/* This update MUST be done to adapt from the current configuration */
 		/* byte rount trip time is not an exact measurement... */
 		/* But is a nice approximation including the piggy time */
-		c->round_trip_time = c->byte_round_trip_time /* * len */ + (c->piggy_time * 2);
+		c->round_trip_time = c->byte_round_trip_time * lround(ceil((double) (len/c->phy_size))) + (c->piggy_time * 2);
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
 	}
@@ -394,6 +394,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	int len;
 	struct pollfd netfd;
 	BYTE buffer[MTU_SIZE + MTU_OVERHEAD];
+	double packet_time;
 
 	netfd.fd = c->net_fd;
 	netfd.fd = POLLIN;
@@ -440,8 +441,11 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		/* Round trip time will be different if is an ACK or a piggybacking frame */
 		/* pending to fix round trip time */
 		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
-		//c->byte_round_trip_time = (int) ( lround( ceil ((double) (c->byte_round_trip_time * 0.2 + 0.8 * ((double) (millitime() - c->timeout) / (double)s->stored_len)) ) ));
-		c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
+		packet_time = ceil( (double) (len/c->phy_size) );
+		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
+		packet_time = (double) (millitime() - c->timeout) / packet_time;
+		c->byte_round_trip_time = (int) (double) (c->byte_round_trip_time * 0.2 + 0.8 * packet_time);
+		//c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
 		log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);
 		c->last_link = millitime();
 		/* A new packet (sent from other station) has been received while witing for ACK */

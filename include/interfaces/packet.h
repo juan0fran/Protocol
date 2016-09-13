@@ -27,6 +27,7 @@ typedef struct Control{
 	int 					death_link_time;		/* death timeout in ms */
 	int 					packet_timeout_time; 	/* start packet timeout in ms */
 	MSFLAG 					master_slave_flag;		
+	int 					phy_size;
 	int 					net_fd;
 	int 					phy_fd;
 	int 					beacon_fd;

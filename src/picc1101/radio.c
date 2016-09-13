@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <wiringPi.h>
+#include <signal.h>
 
 #include "main.h"
 #include "util.h"
@@ -158,6 +159,8 @@ void int_packet(void)
                 radio_int_data.mode = RADIOMODE_NONE;
                 p_radio_int_data->packet_receive = 0; // reception is done
                 p_radio_int_data->packet_rx_count++;
+                /* Rise signal! */
+                raise(SIGPOLL);
             }            
         }        
     }    

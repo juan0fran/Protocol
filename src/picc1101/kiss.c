@@ -188,10 +188,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     static const size_t   bufsize = RADIO_BUFSIZE;
     uint32_t timeout_value;
     uint8_t  rx_buffer[bufsize], tx_buffer[bufsize];
-    uint8_t  rtx_toggle; // 1:Tx, 0:Rx
     uint8_t  rx_trigger; 
     uint8_t  tx_trigger; 
-    uint8_t  force_mode;
     int      rx_count, tx_count, byte_count, ret;
     uint64_t timestamp;
     struct timeval tp;  
@@ -204,8 +202,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     
     verbprintf(1, "Starting...\n");
 
-    force_mode = 1;
-    rtx_toggle = 0;
     rx_trigger = 0;
     tx_trigger = 0;
     rx_count = 0;
@@ -215,9 +211,17 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
     while(1)
     {
+        byte_count = read_serial(serial_parms, tx_buffer, bufsize);
+        if (byte_count > 0)
+        {
+            tx_trigger = 1;
+        }
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[0]); // check if anything was received on radio link
         if (byte_count > 0)
-        {            
+        {
+            rx_trigger = 1;   
+        }
+        if (rx_trigger){
             radio_turn_idle(spi_parms);
             radio_flush_fifos(spi_parms);
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
@@ -225,12 +229,9 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             verbprintf(2, "Received %d bytes\n", byte_count);
             ret = write_serial(serial_parms, rx_buffer, byte_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
+            rx_trigger = 0;
         }
-
-        byte_count = read_serial(serial_parms, tx_buffer, bufsize);
-
-        if (byte_count > 0)
-        {
+        if (tx_trigger){
             radio_wait_free();            // Make sure no radio operation is in progress
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity
@@ -245,6 +246,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             radio_flush_fifos(spi_parms);
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             radio_turn_rx(spi_parms);           // put back into Rx
+            tx_trigger = 0;
         }
     }
 }
