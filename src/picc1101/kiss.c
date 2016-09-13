@@ -277,24 +277,21 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
         if ((tx_count > 0) && ((tx_trigger) || (force_mode))) // Send bytes received on serial to air 
         {
-            if (!kiss_command(tx_buffer))
+            radio_wait_free();            // Make sure no radio operation is in progress
+            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
+
+            verbprintf(2, "%d bytes to send\n", tx_count);
+
+            if (tnc_tx_keyup_delay)
             {
-                radio_wait_free();            // Make sure no radio operation is in progress
-                radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
-                radio_flush_fifos(spi_parms); // Flush result of any Rx activity
-
-                verbprintf(2, "%d bytes to send\n", tx_count);
-
-                if (tnc_tx_keyup_delay)
-                {
-                    usleep(tnc_tx_keyup_delay);
-                }
-
-                radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
-
-                radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
-                radio_turn_rx(spi_parms);            // put back into Rx
+                usleep(tnc_tx_keyup_delay);
             }
+
+            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
+
+            radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
+            radio_turn_rx(spi_parms);            // put back into Rx
 
             tx_count = 0;
             tx_trigger = 0;            
