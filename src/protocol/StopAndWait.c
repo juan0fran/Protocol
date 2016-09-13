@@ -390,7 +390,7 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 		/* This update MUST be done to adapt from the current configuration */
 		/* byte rount trip time is not an exact measurement... */
 		/* But is a nice approximation including the piggy time */
-		c->round_trip_time = c->byte_round_trip_time * lround(ceil((double) (len/c->phy_size))) + (c->piggy_time * 2);
+		c->round_trip_time = (c->byte_round_trip_time * lround(1.0 + floor((double) (len/c->phy_size)))) + (c->piggy_time * 2);
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
 	}
