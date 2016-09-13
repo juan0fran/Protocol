@@ -294,10 +294,10 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 		control.packet_counter = 3;
 		/* Ping link time is 10 seconds */
         control.phy_size = arguments.phy_size;
-		control.ping_link_time = 60000;
+		control.ping_link_time = 20000;
 		control.piggy_time = 10;
 		control.byte_round_trip_time = 500;
-		control.packet_timeout_time = 500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
+		control.packet_timeout_time = 1500; /* ms */ /* The channel has a delay of 10 ms, so 100 ms per timeout as an example */
 		control.round_trip_time = control.packet_timeout_time;
 		control.death_link_time = 60000; /* in ms */ /* after 60 seconds without handshake, test again */
 		log_message(LOG_INFO, "The two socket are initialised\n");

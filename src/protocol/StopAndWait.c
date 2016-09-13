@@ -275,14 +275,9 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 			/* Try again xD */
 			return NO_LINK;
 		}
-		if (pfds[1].revents & POLLIN){
-			if (protocol_control_routine(beacon_send, c, s) == IO_ERROR){
-				return IO_ERROR;
-			}
-		}
 		if (pfds[0].revents & POLLIN){
 			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
-				if (rs.type == 'B'){
+				if (rs.type == 'B' && connect_established == 0){
 					write(c->beacon_fd, recv_buffer, len);
 					/* In case a beacon packet has been received -> Send the beacon up */
 					/* And try to connect them */
@@ -295,11 +290,15 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 						return IO_ERROR;
 					}else{
 						c->initialised = 0;
-					}				
-					return NO_ERROR;
+					}		
+					connect_done = 1;	
+				}else if (rs.type == 'B' && connect_established == 1){
+					/* try again */
+					continue;
 				}
 				if (rs.type == 'C'){
 					/* meaning im the slave answering */
+					log_message(LOG_INFO, "Received a Connection packet!\n");
 					s->type = 'S';
 					s->sn = rs.sn;
 					s->rn = rs.rn;
@@ -330,6 +329,11 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 				}	
 			}else{
 				return NO_LINK;
+			}
+		}
+		if (pfds[1].revents & POLLIN){
+			if (protocol_control_routine(beacon_send, c, s) == IO_ERROR){
+				return IO_ERROR;
 			}
 		}
 	}
