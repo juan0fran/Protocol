@@ -513,8 +513,10 @@ int main (int argc, char **argv)
     {
         // skip SIGUSR2 for Wiring Pi
         if (i == 17)
-            continue; 
-
+            continue;
+        /* do not catch sigpoll */ 
+        if (i == SIGPOLL)
+            continue;
         // These are uncatchable or harmless or we want a core dump (SEGV) 
         if (i != SIGKILL
             && i != SIGSEGV
