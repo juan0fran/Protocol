@@ -35,15 +35,21 @@ int main(int argc, char ** argv){
 	FILE * fp;
 	int net1;
 	int net2;
+	int net1_send;
+	int net2_send;
 	if (argc < 2){
 		exit(-1);
 	}
 
 	if (argc == 2){
 		net1 = initialise_client_socket(argv[1]);
+		net1_send = -1;
+		net2_send = 100;
 	}else{
 		net1 = initialise_client_socket(argv[1]);
 		net2 = initialise_client_socket(argv[2]);	
+		net1_send = -1;
+		net2_send = -1;
 	}
 	
 	int len;
@@ -69,14 +75,14 @@ int main(int argc, char ** argv){
 			/* just return ... */
 		}else if(rv == 0){
 			/* If there is nothing, put some in a net */
-			if (HasToBeSent(0)){
+			if (HasToBeSent(net1_send)){
 				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[0]);
 				printf("Sending from 0: %s", buffer);
 				len = strlen((const char *)buffer) + 1;
 				write(net1, &len, sizeof(int));
 				write(net1, buffer, len);
 			}
-			if(HasToBeSent(0)){
+			if(HasToBeSent(net2_send)){
 				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[1]);
 				printf("Sending from 1: %s", buffer);
 				len = strlen((const char *)buffer) + 1;
