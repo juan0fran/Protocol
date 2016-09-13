@@ -109,8 +109,9 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 				return 0;
 			}else{
 				/* Less timeout */
-				/*timeout -= (millitime() - rx_start);
-				rx_start = millitime();*/
+				timeout -= (millitime() - rx_start);
+				printf("Timeout restante: %d", timeout);
+				rx_start = millitime();
 			}
         }
     } while (block_count < block_total);
