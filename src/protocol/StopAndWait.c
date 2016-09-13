@@ -415,6 +415,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	netfd.fd = c->net_fd;
 	netfd.fd = POLLIN;
 
+	log_message(LOG_INFO, "Timeout for reading from PHY is %d\n", timeout);
 	/* This is the most important, read packet from phy */
 	/* This means, try to receive from the medium during c->round_trip_time time */
 	/* read_packet_from_phy will call a method to extract the packets... */
@@ -593,7 +594,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		timeout = millitime() - timeout;
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
-		rv = poll(ufds, 3, c->ping_link_time);
+		rv = poll(ufds, 3, c->packet_timeout_time);
 		timeout = c->packet_timeout_time;
 	}
 	/* Wait for EVENT */
