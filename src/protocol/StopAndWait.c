@@ -450,7 +450,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		/* Round trip time will be different if is an ACK or a piggybacking frame */
 		/* pending to fix round trip time */
 		log_message(LOG_WARN, "The transmission took: %llu milliseconds\n", millitime() - c->timeout);
-		packet_time = ceil( (double) (len/c->phy_size) );
+		log_message(LOG_WARN, "Plen: %d, phy size: %d\n", len, c->phy_size);
+		packet_time = floor((double)((double)len/(double)c->phy_size)) + 1.0;
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
 		packet_time = (double) (millitime() - c->timeout) / packet_time;
 		c->byte_round_trip_time = (int) (double) (c->byte_round_trip_time * 0.2 + 0.8 * packet_time);
