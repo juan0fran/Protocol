@@ -217,7 +217,13 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     {    
 
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
-
+        if (byte_count == 0){
+            radio_wait_free();            // Make sure no radio operation is in progress
+            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
+            radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
+            radio_turn_rx(spi_parms);            // put back into Rx
+        }
         if (byte_count > 0)
         {
             rx_count += byte_count;  // Accumulate Rx
