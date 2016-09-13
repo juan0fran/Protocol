@@ -44,7 +44,7 @@ int main(int argc, char ** argv){
 	if (argc == 3){
 		net1 = initialise_client_socket(argv[1]);
 		net1_send = atoi(argv[3]);
-		net2_send = 0
+		net2_send = 0;
 	}else{
 		net1 = initialise_client_socket(argv[1]);
 		net2 = initialise_client_socket(argv[2]);	
