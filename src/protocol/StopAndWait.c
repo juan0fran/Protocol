@@ -87,6 +87,10 @@ ErrorHandler protocol_control_routine (ProtocolControlEvent event, Control * c, 
 			if (input_timeout(c->beacon_fd, 0) > 0){
 				log_message(LOG_DEBUG, "Something to read!!\n");
 				len = read(c->beacon_fd, buffer, MTU_SIZE);
+				if (len == 0){
+					log_message(LOG_ERROR, "Error reading\n");
+					return IO_ERROR;
+				}
 				/* First of all, receive a beacon packet from SOCKET FD */
 				return (protocol_send_beacon_routine(buffer, len, c, s));
 			}
