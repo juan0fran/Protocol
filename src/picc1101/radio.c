@@ -160,7 +160,7 @@ void int_packet(void)
                 p_radio_int_data->packet_receive = 0; // reception is done
                 p_radio_int_data->packet_rx_count++;
                 /* Rise signal! */
-                raise(SIGPOLL);
+                raise(SIGIO);
             }            
         }        
     }    
