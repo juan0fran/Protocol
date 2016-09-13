@@ -463,7 +463,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
 		packet_time = (double) (millitime() - c->timeout) / packet_time;
 		log_message(LOG_WARN, "Packet Time: %f\n", packet_time);
-		if ((int) floot(packet_time) < c->byte_round_trip_time){
+		if ((int) floor(packet_time) < c->byte_round_trip_time){
 			c->byte_round_trip_time = (int) floor(packet_time);
 			log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);			
 		}
