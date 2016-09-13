@@ -86,7 +86,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 	/* timeout val is -> you have up to that timeout to receive something */
 	pfd.fd = fd;
 	pfd.events = POLLIN;
-
+	printf("Timeout inicial: %d\n", timeout_val);
 	do{
         block_countdown = radio_receive(fd, packet, &block_total);
         if (block_count != block_countdown)
@@ -110,7 +110,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 			}else{
 				/* Less timeout */
 				timeout -= (millitime() - rx_start);
-				printf("Timeout restante: %d", timeout);
+				printf("Timeout restante: %d\n", timeout);
 				rx_start = millitime();
 			}
         }
