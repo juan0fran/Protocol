@@ -237,6 +237,17 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
             radio_init_rx(spi_parms, arguments); // Init for new packet to receive
             rtx_toggle = 0;
+        }else{
+            rx_count = 0;
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            if (rtx_toggle) // Tx to Rx transition
+            {
+                tx_trigger = 1; // Push Tx
+            }
+            else
+            {
+                tx_trigger = 0;
+            }
         }
 
         byte_count = read_serial(serial_parms, &tx_buffer[tx_count], bufsize - tx_count);
