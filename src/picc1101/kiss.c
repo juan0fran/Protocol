@@ -261,7 +261,16 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
             rtx_toggle = 1;
         }
+        if (!force_mode)
+        {
+            gettimeofday(&tp, NULL);
 
+            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
+            {
+                force_mode = 1;
+            }                        
+        }
+        
         if ((rx_count > 0) && ((rx_trigger) || (force_mode))) // Send bytes received on air to serial
         {
             radio_wait_free();            // Make sure no radio operation is in progress
@@ -275,6 +284,16 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rx_trigger = 0;
         }
 
+        if (!force_mode)
+        {
+            gettimeofday(&tp, NULL);
+
+            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
+            {
+                force_mode = 1;
+            }                        
+        }
+    
         if ((tx_count > 0) && ((tx_trigger) || (force_mode))) // Send bytes received on serial to air 
         {
             if (!kiss_command(tx_buffer))
@@ -299,17 +318,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             tx_count = 0;
             tx_trigger = 0;            
         }
-
-        if (!force_mode)
-        {
-            gettimeofday(&tp, NULL);
-
-            if ((tp.tv_sec * 1000000ULL + tp.tv_usec) > timestamp + timeout_value)
-            {
-                force_mode = 1;
-            }                        
-        }
-        radio_wait_a_bit(4);
     }
 
     #if 0
