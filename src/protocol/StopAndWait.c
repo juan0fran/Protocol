@@ -394,6 +394,9 @@ ErrorHandler SendNetFrame(Control * c, Status * s){
 			c->round_trip_time = c->packet_timeout_time;
 		}else{
 			c->round_trip_time = (c->byte_round_trip_time * lround(1.0 + floor((double) (len/c->phy_size)))) + (c->piggy_time * 2);
+			if (c->round_trip_time > c->packet_timeout_time){
+				c->round_trip_time = c->packet_timeout_time;
+			}
 		}
 		log_message(LOG_WARN, "Timeout for this transmission is: %d\n", c->round_trip_time);
 		c->timeout = millitime();
@@ -481,14 +484,17 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 					log_message(LOG_ERROR, "poll inside function: ");
 					return IO_ERROR;
 				}else if (rv == 0){
+					log_message(LOG_INFO, "Sending ACK from a piggybacking packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}else{
+					log_message(LOG_WARN, "Going to send a piggybacking from a piggybacking packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
-					return NO_ERROR;
+					return (SendNetFrame(c, s));
+					/*return NO_ERROR;*/
 				}
 			}
 			return NO_ERROR;
@@ -515,14 +521,16 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 					log_message(LOG_ERROR, "poll inside function: ");
 					return IO_ERROR;
 				}else if (rv == 0){
+					log_message(LOG_INFO, "Sending ACK from a new packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
 					write_ack_to_phy(c->phy_fd, c, s);
 					return NO_ERROR;
 				}else{
+					log_message(LOG_WARN, "Going to send a piggybacking from a new packet\n");
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
-					return NO_ERROR;
+					return (SendNetFrame(c, s));
 				}
 			}
 			if (rs.type == 'C'){
