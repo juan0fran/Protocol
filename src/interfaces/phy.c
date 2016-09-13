@@ -104,7 +104,7 @@ static int radio_receive_block(int fd, BYTE * packet, int timeout_val){
 				perror ("Error with poll: ");
 				return -1;
 			}else if (rv == 0){
-				//printf("RADIO: timeout waiting for the next block, aborting packet\n");
+				printf("RADIO: timeout waiting for the next block, aborting packet\n");
 				flush_phy(fd);
 				return 0;
 			}else{

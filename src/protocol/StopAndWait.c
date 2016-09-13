@@ -437,6 +437,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
+		log_message(LOG_WARN, "I was trying to send a packet and the other sends me a new one not ACKing\n");
 		ResendFrame(c, s);
 	}
 	/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
@@ -454,7 +455,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		packet_time = floor((double)((double)len/(double)c->phy_size)) + 1.0;
 		log_message(LOG_WARN, "Packet Amount: %f\n", packet_time);
 		packet_time = (double) (millitime() - c->timeout) / packet_time;
-		c->byte_round_trip_time = (int) (double) (c->byte_round_trip_time * 0.2 + 0.8 * packet_time);
+		c->byte_round_trip_time = (int) (double) floor((c->byte_round_trip_time * 0.2 + 0.8 * packet_time));
 		//c->byte_round_trip_time = (int) lround ((double) ((double) c->round_trip_time * 0.2 + 0.8 * (double) (millitime() - c->timeout)));
 		log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);
 		c->last_link = millitime();
