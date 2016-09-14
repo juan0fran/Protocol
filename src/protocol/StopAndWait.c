@@ -349,9 +349,9 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		log_message(LOG_WARN, "Timeout EXPIRED for packet: SEQ -> %d\n", atoi((char *) s->stored_packet));
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
-		c->initialised = 0;
+		//c->initialised = 0;
 		/* try to get the master */
-		c->master_slave_flag = MASTER;
+		//c->master_slave_flag = MASTER;
 		//c->byte_round_trip_time = 0;
 		//c->round_trip_time = c->packet_timeout_time;
 		c->waiting_ack = false;
@@ -590,8 +590,6 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	int rv;
 	ErrorHandler err;
 	struct pollfd ufds[3];
-	unsigned long long timeout;
-
 	//log_message(LOG_DEBUG, "Print the states: SN: %d RN: %d\n", s->sn, s->rn);
 
 	ufds[0].fd = c->net_fd;
@@ -608,7 +606,6 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 3, c->ping_link_time);
-		timeout = 0;
 	}
 	/* Wait for EVENT */
 	if (rv == -1){
