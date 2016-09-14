@@ -603,7 +603,8 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 
 	if (c->waiting_ack == true){
 		log_message(LOG_DEBUG, "Waiting for a packet from PHY -> do not accept from net\n");
-		rv = poll(&ufds[1], 1, c->round_trip_time);
+		//rv = poll(&ufds[1], 1, c->round_trip_time);
+		rv = poll(&ufds[1], 1, c->packet_timeout_time);
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 3, c->ping_link_time);
