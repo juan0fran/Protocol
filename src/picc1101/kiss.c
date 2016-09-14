@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include "kiss.h"
 #include "radio.h"
@@ -342,12 +343,14 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         }
         if (tx_trigger){
             radio_wait_free();            // Make sure no radio operation is in progress
+            /* This should mean, no packet being received */
             radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity
 
             verbprintf(2, "%d bytes to send\n", tx_count);
-
             /* I send the radio packet */
+            /* Before sending the packet -> random usleep */
+            radio_wait_a_bit(rand()%100);
             radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
 
             /* Then put the radio to RX again */
