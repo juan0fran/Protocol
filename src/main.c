@@ -260,7 +260,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 	log_init(arguments.debug_level, NULL, 0);
 	while (1){
 		log_message(LOG_DEBUG, "Connect sockets\n");
-		control.phy_fd = initialise_server_socket(sock_data_phy);
+		control.phy_fd = initialise_client_socket(sock_data_phy);
 		if (control.phy_fd == -1){
 			perror("Openning phyfd: ");
 			exit(-1);
