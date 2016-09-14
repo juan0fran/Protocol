@@ -334,15 +334,14 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         if (tx_trigger){
 
             radio_wait_free();            // Make sure no radio operation is in progress
-            /* This should mean, no packet being received */
-            
+            wait_for_cca(spi_parms, 50);
+            /* This should mean, no packet being received */            
             verbprintf(2, "%d bytes to send\n", tx_count);
             /* I send the radio packet */
             /* Before sending the packet -> random usleep */
             /*radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
             radio_flush_fifos(spi_parms); // Flush result of any Rx activity*/
             radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
-
             /* Then put the radio to RX again */
             radio_turn_idle(spi_parms);
             radio_flush_fifos(spi_parms);
