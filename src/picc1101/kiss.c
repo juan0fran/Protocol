@@ -319,7 +319,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     #if 1
     while(1)
     {
-        if (doing_radio_operations(serial_parms) == 0){
+        if (doing_radio_operations(spi_parms) == 0){
             byte_count = read_serial(serial_parms, tx_buffer, bufsize);
             if (byte_count > 0)
             {
