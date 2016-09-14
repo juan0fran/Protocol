@@ -572,8 +572,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	}else{
 		/* In case of received packet that amis to get an ACK */
 		if (rs.type != 'A'){
-			log_message(LOG_DEBUG, "ACKing old packet\n");
-			write_ack_to_phy(c->phy_fd, c, s);
+			//log_message(LOG_DEBUG, "ACKing old packet\n");
+			//write_ack_to_phy(c->phy_fd, c, s);
 		}
 		return NO_ERROR;
 	}
