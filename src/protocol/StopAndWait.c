@@ -295,6 +295,7 @@ static ErrorHandler Connect_Slave(Control * c, Status * s){
 						c->initialised = 0;
 					}		
 					connect_done = 1;	
+					continue;
 				}else if (rs.type == 'B' && connect_established == 1){
 					/* try again */
 					continue;
