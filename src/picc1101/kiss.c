@@ -267,8 +267,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         {
             if (rx_count > 0){
                 radio_wait_free();            // Make sure no radio operation is in progress
-                wait_for_state(spi_parms, PI_CCxxx0_SIDLE, 10);
-                //radio_turn_idle(spi_parms);   // Inhibit radio operations
+                radio_turn_idle(spi_parms);   // Inhibit radio operations
                 verbprintf(2, "Received %d bytes\n", rx_count);
                 ret = write_serial(serial_parms, rx_buffer, rx_count);
                 verbprintf(2, "Sent %d bytes on serial\n", ret);
@@ -284,8 +283,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             if (tx_count > 0){
                 /* Waits for a packet to be sent */
                 radio_wait_free();            // Make sure no radio operation is in progress
-                wait_for_state(spi_parms, PI_CCxxx0_SIDLE, 10);
-                //radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+                radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
                 radio_flush_fifos(spi_parms); // Flush result of any Rx activity
 
                 verbprintf(2, "%d bytes to send\n", tx_count);
