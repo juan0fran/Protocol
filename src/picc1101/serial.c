@@ -194,7 +194,7 @@ int read_serial(serial_t *serial_parameters, char *buf, int buflen)
     int readed;
     pfd.fd = serial_parameters->sock_fd;
     pfd.events = POLLIN;
-    rv = poll(&pfd, 1, 10); /* read without timeout */
+    rv = poll(&pfd, 1, 0); /* read without timeout */
     if (rv == -1){
         perror("Poll error:");
         return -1;
