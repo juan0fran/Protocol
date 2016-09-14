@@ -297,7 +297,7 @@ int protocol_routine(char * sock_data_phy, char * sock_data_net, char * sock_dat
 		/* Ping link time is 10 seconds */
         control.phy_size = arguments.phy_size;
 		control.ping_link_time = 20000;
-		control.piggy_time = 10;
+		control.piggy_time = 20;
 		control.byte_round_trip_time = 100;
 		control.packet_timeout_time = 1000;
 		control.round_trip_time = control.packet_timeout_time;

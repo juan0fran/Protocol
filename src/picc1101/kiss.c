@@ -355,12 +355,12 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
         }
         if (rx_trigger){
             radio_turn_idle(spi_parms);
-            radio_flush_fifos(spi_parms);
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
-            radio_turn_rx(spi_parms);            // Turn Rx on
+            radio_flush_fifos(spi_parms);            // Turn Rx on
             verbprintf(2, "Received %d bytes\n", rx_count);
             ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            radio_turn_rx(spi_parms);            
             rx_trigger = 0;
         }
         /* sleep a bit */
