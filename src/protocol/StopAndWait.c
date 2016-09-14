@@ -418,7 +418,6 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	netfd.fd = c->net_fd;
 	netfd.fd = POLLIN;
 
-	log_message(LOG_INFO, "Timeout for reading from PHY is %d\n", timeout);
 	/* This is the most important, read packet from phy */
 	/* This means, try to receive from the medium during c->round_trip_time time */
 	/* read_packet_from_phy will call a method to extract the packets... */
@@ -446,12 +445,13 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		return NO_ERROR;
 	}
 
-	if (rs.rn == s->sn && c->waiting_ack == true){
+	//if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
-		log_message(LOG_WARN, "I was trying to send a packet and the other sends me a new one not ACKing\n");
-		ResendFrame(c, s);
-	}
+	//	log_message(LOG_WARN, "I was trying to send a packet and the other sends me a new one not ACKing\n");
+	//	ResendFrame(c, s);
+	//}
+
 	/* This means, a packet ACKing the last sent packet has been received (we have to update the sequence number) */
 	if (rs.rn != s->sn && c->waiting_ack == true){
 		log_message(LOG_INFO, "Good packet while waiting for ACK. s->sn updated\n");
@@ -594,9 +594,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 
 	if (c->waiting_ack == true){
 		log_message(LOG_DEBUG, "Waiting for a packet from PHY -> do not accept from net\n");
-		timeout = millitime();
 		rv = poll(&ufds[1], 1, c->round_trip_time);
-		timeout = millitime() - timeout;
 	}else{
 		log_message(LOG_INFO, "Waiting for some packet from NET or PHY\n");
 		rv = poll(ufds, 3, c->ping_link_time);
@@ -624,7 +622,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 		if (ufds[1].revents & POLLIN){
 			/* TODO: MAKE A FUNCTION FOR THAT */
 			log_message(LOG_DEBUG, "Something at the PHYSICAL layer\n");
-			err = RecvPhyFrame(c, s, (int) timeout);
+			err = RecvPhyFrame(c, s, 0);
 			if (err != NO_ERROR){
 				return err;
 			}
