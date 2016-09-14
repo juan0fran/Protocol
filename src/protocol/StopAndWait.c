@@ -219,7 +219,7 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
 				/* The slave answers S */
 				if (rs.type == 'S'){
-					s->sn = rs.rn;
+					//s->sn = rs.rn;
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
 					write_ack_to_phy(c->phy_fd, c, s);
