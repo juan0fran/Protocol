@@ -470,9 +470,12 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		packet_time = (double) (millitime() - c->timeout) / packet_time;
 		log_message(LOG_WARN, "Packet Time: %f\n", packet_time);
 
-		if ((int) floor(packet_time) < c->byte_round_trip_time){
+		if ( (c->byte_round_trip_time != 0) && ((int) floor(packet_time) < c->byte_round_trip_time)){
 			c->byte_round_trip_time = (int) floor(packet_time);
 			log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);			
+		}else if (c->byte_round_trip_time == 0){
+			c->byte_round_trip_time = (int) floor(packet_time);
+			log_message(LOG_WARN, "Byte round trip time updated to: %d\n", c->byte_round_trip_time);	
 		}
 
 		c->last_link = millitime();
