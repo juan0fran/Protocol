@@ -1027,13 +1027,9 @@ void radio_wait_a_bit(uint32_t amount)
 void radio_wait_free()
 // ------------------------------------------------------------------------------------------------
 {
-    int first = 1;
+    printf("Radio is in: %d %d\n", radio_int_data.packet_receive, radio_int_data.packet_send);
     while((radio_int_data.packet_receive) || (radio_int_data.packet_send))
     {
-        if (first == 1){
-            printf("Radio is in: %d %d\n", radio_int_data.packet_receive, radio_int_data.packet_send);
-            first = 0;
-        }
         radio_wait_a_bit(16);
     }
 }

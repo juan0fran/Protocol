@@ -331,6 +331,26 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             rx_count = byte_count;
             rx_trigger = 1;   
         }
+        if (tx_trigger){
+
+            radio_wait_free();            // Make sure no radio operation is in progress
+            /* This should mean, no packet being received */
+            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
+            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
+
+            verbprintf(2, "%d bytes to send\n", tx_count);
+            /* I send the radio packet */
+            /* Before sending the packet -> random usleep */
+            radio_wait_a_bit(rand()%255);
+            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
+
+            /* Then put the radio to RX again */
+            radio_turn_idle(spi_parms);
+            radio_flush_fifos(spi_parms);
+            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
+            radio_turn_rx(spi_parms);           // put back into Rx
+            tx_trigger = 0;
+        }
         if (rx_trigger){
             radio_turn_idle(spi_parms);
             radio_flush_fifos(spi_parms);
@@ -340,25 +360,6 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             ret = write_serial(serial_parms, rx_buffer, rx_count);
             verbprintf(2, "Sent %d bytes on serial\n", ret);
             rx_trigger = 0;
-        }
-        if (tx_trigger){
-            radio_wait_free();            // Make sure no radio operation is in progress
-            /* This should mean, no packet being received */
-            radio_turn_idle(spi_parms);   // Inhibit radio operations (should be superfluous since both Tx and Rx turn to IDLE after a packet has been processed)
-            radio_flush_fifos(spi_parms); // Flush result of any Rx activity
-
-            verbprintf(2, "%d bytes to send\n", tx_count);
-            /* I send the radio packet */
-            /* Before sending the packet -> random usleep */
-            radio_wait_a_bit(rand()%100);
-            radio_send_packet(spi_parms, arguments, tx_buffer, tx_count);
-
-            /* Then put the radio to RX again */
-            radio_turn_idle(spi_parms);
-            radio_flush_fifos(spi_parms);
-            radio_init_rx(spi_parms, arguments); // Init for new packet to receive
-            radio_turn_rx(spi_parms);           // put back into Rx
-            tx_trigger = 0;
         }
     }
     #endif
