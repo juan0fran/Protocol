@@ -445,6 +445,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		return NO_ERROR;
 	}
 
+	printf("i will go over here bro\n");
+
 	//if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
