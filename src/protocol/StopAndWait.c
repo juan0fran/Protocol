@@ -523,7 +523,6 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	/* A new packet (sent from other station) has been received, we were not waiting for ACK or nothing */
 	if (rs.sn == s->rn){
 		if (c->waiting_ack == false){
-			/* Aquí no entro nunca broh */
 			log_message(LOG_INFO, "Received sn == rn and waiting_ack == false\n");
 			if (rs.type == 'D' || rs.type == 'P'){
 				if (rs.type == 'D'){
@@ -558,8 +557,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 				write_ack_to_phy(c->phy_fd, c, s);
 				return NO_ERROR;
 			}
-		}else{
-			/* A packet received not ACKing my last packet, but I was waiting a packet */
+		}/*else{
+			A packet received not ACKing my last packet, but I was waiting a packet
 			log_message(LOG_INFO, "Received sn == rn and waiting_ack == true\n");
 			if (rs.type == 'D' || rs.type == 'P'){
 				if (rs.type == 'D'){
@@ -575,7 +574,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 				write_ack_to_phy(c->phy_fd, c, s);
 				return NO_ERROR;
 			}
-		}
+		}*/
 	}else{
 		/* In case of received packet that amis to get an ACK */
 		if (rs.type != 'A'){
