@@ -445,8 +445,9 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 		return NO_ERROR;
 	}
 
-	printf("i will go over here bro\n");
-
+	log_message(LOG_DEBUG, "My states: SN: %d RN: %d\n", s->sn, s->rn);
+	log_message(LOG_DEBUG, "Their states: SN: %d RN: %d\n", rs.sn, rs.rn);
+	
 	//if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
@@ -588,7 +589,7 @@ ErrorHandler StopAndWait(Control * c, Status * s){
 	struct pollfd ufds[3];
 	unsigned long long timeout;
 
-	log_message(LOG_DEBUG, "Print the states: SN: %d RN: %d\n", s->sn, s->rn);
+	//log_message(LOG_DEBUG, "Print the states: SN: %d RN: %d\n", s->sn, s->rn);
 
 	ufds[0].fd = c->net_fd;
 	ufds[0].events = POLLIN; // check for normal data
