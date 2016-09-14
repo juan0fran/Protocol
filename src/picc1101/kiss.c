@@ -335,6 +335,7 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
 
             radio_wait_free();            // Make sure no radio operation is in progress
             wait_for_cca(spi_parms, 50);
+            radio_wait_free(); 
             /* This should mean, no packet being received */            
             verbprintf(2, "%d bytes to send\n", tx_count);
             /* I send the radio packet */
