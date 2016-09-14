@@ -212,6 +212,7 @@ void physical_layer_control(){
 	/* Connect to a physical layer -> simulated as we are a socket client */
 	/* Connect to a network layer -> simulated as we are a socket client */
 	ErrorHandler err;
+    control.master_slave_flag = SLAVE;
 	while(1){
 		if (control.initialised == 0){
 			/* If there is any beacon message available -> send it */
@@ -219,10 +220,11 @@ void physical_layer_control(){
 			/* If a beacon message is received -> Try to connect to the SLAVE */
 			/* Here -> Try to receive a message */
 			/* In case some packet has been received but the packet is not a beacon packet -> try to connect as slave */
-			control.master_slave_flag = SLAVE;
 			/* Until it is not initialised, try to initilise */
 			//log_message(LOG_INFO, "Going to initialise the link\n");
 			err = protocol_establishment_routine(initialise_link, &control, &status);
+            /* make it slave after connecting */
+            control.master_slave_flag = SLAVE;
 			if (err == IO_ERROR){
 				log_message(LOG_ERROR, "Error at protocol control: %d\n", err);
 				return;

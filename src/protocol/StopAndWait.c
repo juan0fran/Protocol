@@ -219,7 +219,8 @@ static ErrorHandler Connect_Master(Control * c, Status * s){
 			if (len = read_packet_from_phy(c->phy_fd, recv_buffer, c->packet_timeout_time, c, &rs), len > 0){
 				/* The slave answers S */
 				if (rs.type == 'S'){
-					//s->sn = rs.rn;
+					/* this is like a piggybacking ack */
+					s->sn = rs.rn;
 					s->rn = (s->rn + 1)%2;
 					c->last_link = millitime();
 					write_ack_to_phy(c->phy_fd, c, s);
@@ -347,7 +348,9 @@ ErrorHandler ResendFrame(Control * c, Status * s){
 		log_message(LOG_WARN, "Timeout EXPIRED for packet: SEQ -> %d\n", atoi((char *) s->stored_packet));
 		/* Last link updated, round trip time must be updated */
 		/* Every packet sent c->timeout is set */
-		//c->initialised = 0;
+		c->initialised = 0;
+		/* try to get the master */
+		c->master_slave_flag = MASTER;
 		//c->byte_round_trip_time = 0;
 		//c->round_trip_time = c->packet_timeout_time;
 		c->waiting_ack = false;
