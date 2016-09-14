@@ -447,7 +447,7 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 
 	log_message(LOG_DEBUG, "My states: SN: %d RN: %d\n", s->sn, s->rn);
 	log_message(LOG_DEBUG, "Their states: SN: %d RN: %d\n", rs.sn, rs.rn);
-	
+
 	//if (rs.rn == s->sn && c->waiting_ack == true){
 		/* The packet that is being received is a new one, but I want to send a previous one!! */
 		/* Resend the packet and forget about the received here */
@@ -575,8 +575,8 @@ ErrorHandler RecvPhyFrame(Control * c, Status * s, int timeout){
 	}else{
 		/* In case of received packet that amis to get an ACK */
 		if (rs.type != 'A'){
-			//log_message(LOG_DEBUG, "ACKing old packet\n");
-			//write_ack_to_phy(c->phy_fd, c, s);
+			log_message(LOG_DEBUG, "ACKing old packet\n");
+			write_ack_to_phy(c->phy_fd, c, s);
 		}
 		return NO_ERROR;
 	}
