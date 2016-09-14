@@ -1022,6 +1022,21 @@ void radio_wait_a_bit(uint32_t amount)
     usleep(amount * radio_int_data.wait_us);
 }
 
+int doing_radio_operations(spi_parms_t *spi_parms)
+{
+    uint8_t pstatus;
+    PI_CC_SPIReadStatus(spi_parms, PI_CCxxx0_PKTSTATUS, &pstatus);
+    if ( ( (pstatus >> 4) & 0x01 ) == 0){
+        printf("Channel is not clear\n")
+        return 1;
+    }
+    if (radio_int_data.packet_receive || radio_int_data.packet_send){
+        printf("Channel is not clear\n")
+        return 1;
+    }
+    return 0;
+}
+
 void wait_for_cca(spi_parms_t *spi_parms, uint32_t timeout)
 {
     uint8_t pstatus;

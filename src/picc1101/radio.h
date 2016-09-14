@@ -141,6 +141,7 @@ void     radio_wait_a_bit(uint32_t amount);
 void     radio_wait_free();
 
 void wait_for_cca(spi_parms_t *spi_parms, uint32_t timeout);
+int doing_radio_operations(spi_parms_t *spi_parms);
 
 void     radio_send_packet(spi_parms_t *spi_parms, arguments_t *arguments, uint8_t *packet, uint32_t size);
 uint32_t radio_receive_packet(spi_parms_t *spi_parms, arguments_t *arguments, uint8_t *packet);
