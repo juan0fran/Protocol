@@ -212,10 +212,10 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
     tx_count = 0;
     radio_init_rx(spi_parms, arguments); // init for new packet to receive Rx
     radio_turn_rx(spi_parms);            // Turn Rx on
-
+    
+    #if 0
     while(1)
     {    
-
         byte_count = radio_receive_packet(spi_parms, arguments, &rx_buffer[rx_count]); // check if anything was received on radio link
         if (byte_count > 0)
         {
@@ -314,8 +314,8 @@ void kiss_run(serial_t *serial_parms, spi_parms_t *spi_parms, arguments_t *argum
             force_mode = 1;
         }                        
     }
-    
-    #if 0
+    #endif
+    #if 1
     while(1)
     {
         byte_count = read_serial(serial_parms, tx_buffer, bufsize);

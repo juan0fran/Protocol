@@ -73,7 +73,7 @@ int main(int argc, char ** argv){
 		if ((counter[0]) == 5000){
 			exit(0);
 		}
-		rv = poll(ufds, (argc-1), 500);
+		rv = poll(ufds, (argc-1), 250);
 		if (rv == -1){
 			perror("poll");
 			/* just return ... */
@@ -96,6 +96,20 @@ int main(int argc, char ** argv){
 			/* This will also simulate transmission time */
 			/* a packet every 500 ms, each side will send a packet every second */
 		}else{
+			if (HasToBeSent(net1_send)){
+				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[0]);
+				printf("Sending from 0: %s", buffer);
+				len = strlen((const char *)buffer) + 1;
+				write(net1, &len, sizeof(int));
+				write(net1, buffer, len);
+			}
+			if(HasToBeSent(net2_send)){
+				sprintf((char *)buffer, "%d coutner <-- this is the test sequence to be sent\n", ++counter[1]);
+				printf("Sending from 1: %s", buffer);
+				len = strlen((const char *)buffer) + 1;
+				write(net2, &len, sizeof(int));
+				write(net2, buffer, len);
+			}			
 			if (argc == 5){
 				if (ufds[1].revents & POLLIN){
 					ret = read(ufds[1].fd, &len, sizeof(int));
