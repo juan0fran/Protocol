@@ -370,6 +370,19 @@ void get_rate_words(arguments_t *arguments, radio_parms_t *radio_parms)
     radio_parms->chanspc_e &= 0x03; // it is 2 bits long
 }
 
+void wait_for_cca(spi_parms_t *spi_parms, uint32_t timeout)
+{
+    uint8_t pstatus;
+    while(timeout){
+        PI_CC_SPIReadStatus(spi_parms, PI_CCxxx0_PKTSTATUS, &pstatus);
+        if ( ( (pstatus >> 4) & 0x01 ) == 0){
+            timeout++;
+        }
+        usleep(1000);
+        timeout--;
+    }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Poll FSM state waiting for given state until timeout (approx ms)
 void wait_for_state(spi_parms_t *spi_parms, ccxxx0_state_t state, uint32_t timeout)
