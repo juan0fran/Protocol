@@ -370,19 +370,6 @@ void get_rate_words(arguments_t *arguments, radio_parms_t *radio_parms)
     radio_parms->chanspc_e &= 0x03; // it is 2 bits long
 }
 
-void wait_for_cca(spi_parms_t *spi_parms, uint32_t timeout)
-{
-    uint8_t pstatus;
-    while(timeout){
-        PI_CC_SPIReadStatus(spi_parms, PI_CCxxx0_PKTSTATUS, &pstatus);
-        if ( ( (pstatus >> 4) & 0x01 ) == 0){
-            timeout++;
-        }
-        usleep(1000);
-        timeout--;
-    }
-}
-
 // ------------------------------------------------------------------------------------------------
 // Poll FSM state waiting for given state until timeout (approx ms)
 void wait_for_state(spi_parms_t *spi_parms, ccxxx0_state_t state, uint32_t timeout)
@@ -1035,6 +1022,20 @@ void radio_wait_a_bit(uint32_t amount)
     usleep(amount * radio_int_data.wait_us);
 }
 
+void wait_for_cca(spi_parms_t *spi_parms, uint32_t timeout)
+{
+    uint8_t pstatus;
+    while(timeout){
+        PI_CC_SPIReadStatus(spi_parms, PI_CCxxx0_PKTSTATUS, &pstatus);
+        printf("Pstatus is: %d\n", pstatus);
+        if ( ( (pstatus >> 4) & 0x01 ) == 0){
+            timeout++;
+        }
+        usleep(1000);
+        timeout--;
+    }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Wait for the reception or transmission to finish
 void radio_wait_free()
@@ -1043,6 +1044,7 @@ void radio_wait_free()
     printf("Radio is in: %d %d\n", radio_int_data.packet_receive, radio_int_data.packet_send);
     while((radio_int_data.packet_receive) || (radio_int_data.packet_send))
     {
+        printf("Wait until radio is free\n");
         radio_wait_a_bit(16);
     }
 }
